@@ -35,7 +35,8 @@ function [plotdata,idx,onsets] = EffDesign_ColourSpeech(dummy_trials,null_events
 %
 %   EFFDESIGN_COLOURSPEECH(DUMMY_TRIALS,NULL_EVENTS,GREENBOOL,NSIM) Takes the optional
 %   argument 'nsim', an integer that determines the number of iterations.
-%   There are 3 jitters to optimise, so the nr. of iterations is nsim^3!
+%   The scriipt searches through each of the dimensions with nsim number of
+%   steps. There are 3 jitters to optimise, so the nr. of iterations is nsim^3!
 %   Defaults to 10, so 1000 iterations.
 %
 %   [PLOTDATA,IDX,ONSETS] = EFFDESIGN_COLOURSPEECH(...) Outputs the data used in the
@@ -215,7 +216,7 @@ for g=1:nsim% 'g'-loop, where jitter 3 is systematically varied
             trialonsets = [0 cumsum(trialdurs(1:end-1))];% trialonsets is in seconds
             
             t4b = trialonsets(null_events) + Stimtime + j1pr_use(null_events) + jit2s(null_events);% j1pr_use(null_events) takes the jitter 1 plus resp (0 if not a dummy trial) only for this specific null trial.
-            onsets.null{j,h,g} = t4b(t4b <= endtime);
+            onsets.null{h,j,g} = t4b(t4b <= endtime);
             
             if length(greenbool) > length(trialonsets)
                 % Here, the greenbool gets cut to size if it was too long.
@@ -225,28 +226,28 @@ for g=1:nsim% 'g'-loop, where jitter 3 is systematically varied
             end% If it is too short, the last part of the design will be empty.
             
             t1b = trialonsets(tmpgreenbool);% only the onsets of green trials
-            onsets.green{j,h,g} = t1b(t1b <= endtime);% cut to size seperately because it needs to be saved
+            onsets.green{h,j,g} = t1b(t1b <= endtime);% cut to size seperately because it needs to be saved
             r1 = zeros(1, endtime*4+1);% create an empty regressor at 4Hz sampling rate.
             
             for i=1:length(t1b)% what happens to the trials that do not fit onto r1b any more? --> They disappear from view, because in the part "t1b(i)<=t & t<=(t1b(i)+Stimtime" any element of t1b that is higher than the endtime anyway is not considered.
                 r1(t1b(i)<=t & t<=(t1b(i)+Stimtime))=1;  %add .5 for a 500ms duration, or whatever your stimulus time is.
             end
             
-            r1_save{g,h,j} = (r1(1:4*TR:4*endtime)/5)-.2;% Resampling at the TR, div by 5 and minus .2 for plotting.
+            r1_save{h,j,g} = (r1(1:4*TR:4*endtime)/5)-.2;% Resampling at the TR, div by 5 and minus .2 for plotting.
             
             r1b=conv(hrf_25, r1);
             r1b=r1b(1:4*TR:4*endtime);% Resampling at the TR.
             r1b=r1b-mean(r1b);% mean centering is an alternative for including a regressor of ones into your design matrix.
             
             t2b = trialonsets(~tmpgreenbool);% any non-green is red. BUT: where greenbool is not present (indices later than greenbool) I guess this defaults to '1'?
-            onsets.red{j,h,g} = t2b(t2b <= endtime);% cut to size seperately because it needs to be saved
+            onsets.red{h,j,g} = t2b(t2b <= endtime);% cut to size seperately because it needs to be saved
             r2 = zeros(1, endtime*4+1);
             
             for i=1:length(t2b)
                 r2(t2b(i)<=t & t<=(t2b(i) + Stimtime))=1;  %add Stimtime for its duration
             end
             
-            r2_save{g,h,j} = (r2(1:4*TR:4*endtime)/5)-.2;
+            r2_save{h,j,g} = (r2(1:4*TR:4*endtime)/5)-.2;
             
             r2b=conv(hrf_25, r2);
             r2b=r2b(1:4*TR:4*endtime);
@@ -255,7 +256,7 @@ for g=1:nsim% 'g'-loop, where jitter 3 is systematically varied
             % speech regressor: only on some of the trials.
             % after trial onset, the stimulus and jitter 1 happen before this one.
             t3b = trialonsets(dummy_trials) + Stimtime + jit1s(dummy_trials);
-            onsets.overt{j,h,g} = t3b(t3b <= endtime);% cut to size seperately because it needs to be saved
+            onsets.overt{h,j,g} = t3b(t3b <= endtime);% cut to size seperately because it needs to be saved
             r3 = zeros(1, endtime*4+1);
             
             for i=1:length(t3b)%  Even though t3b is probably longer than the nr of trials needed,
@@ -265,28 +266,28 @@ for g=1:nsim% 'g'-loop, where jitter 3 is systematically varied
                 r3(t3b(i)<=t & t<=(t3b(i) + Resptime))=1;  %add Resptime for its duration
             end
             
-            r3_save{g,h,j} = (r3(1:4*TR:4*endtime)/5)-.2;
+            r3_save{h,j,g} = (r3(1:4*TR:4*endtime)/5)-.2;
             
             r3b=conv(hrf_25, r3);
             r3b=r3b(1:4*TR:4*endtime);
             r3b=r3b-mean(r3b);
             
-            designs.green_regr{j,h,g} = r1b;
-            designs.red_regr{j,h,g} = r2b;
-            designs.overt_regr{j,h,g} = r3b;
+            designs.green_regr{h,j,g} = r1b;
+            designs.red_regr{h,j,g} = r2b;
+            designs.overt_regr{h,j,g} = r3b;
             % there is no r4b because the null events are not modelled
             
             Xb=[r1b', r2b', r3b'];
             c1=[1 0 0];
             c2=[0 1 0];
             
-            eff_save_1(j,h,g)=1./(c1*inv(Xb'*Xb)*c1');% here is the formula for calculating efficiency.
-            eff_save_2(j,h,g)=1./(c2*inv(Xb'*Xb)*c2');
-            eff_save_stimuli(j,h,g)=2./(c1*inv(Xb'*Xb)*c1'+c2*inv(Xb'*Xb)*c2');
+            eff_save_1(h,j,g)=1./(c1*inv(Xb'*Xb)*c1');% here is the formula for calculating efficiency.
+            eff_save_2(h,j,g)=1./(c2*inv(Xb'*Xb)*c2');
+            eff_save_stimuli(h,j,g)=2./(c1*inv(Xb'*Xb)*c1'+c2*inv(Xb'*Xb)*c2');
             
             % also get the Variance Inflation Factor
             R0 = corrcoef(Xb);
-            VIF(j,h,g) = max(diag(inv(R0))');% max is a little misleading in relation to the cursor updating thing
+            VIF(h,j,g) = max(diag(inv(R0))');% max is a little misleading in relation to the cursor updating thing
             
         end% of 'j'-loop, where jitter 1 is systematically varied
     end% of 'h'-loop, where jitter 2 is systematically varied
@@ -313,19 +314,19 @@ title('Last design tested')
 
 % collecting output for plotting
 
-Xcopies = ones(1,length(jit1multsave));
-Ycopies = ones(1,length(jit2multsave));
-Zcopies = ones(1,length(jit3multsave));
+%Xcopies = ones(1,length(jit1multsave));
+%Ycopies = ones(1,length(jit2multsave));
+%Zcopies = ones(1,length(jit3multsave));
 
-plotdata.X = jit1multsave' + minj1t;
-plotdata.X = plotdata.X(Ycopies,:,Zcopies);
+plotdata_X = jit1multsave' + minj1t;
+%plotdata.X = plotdata.X(Ycopies,:,Zcopies);
 
-plotdata.Y = jit2multsave + minj2t;
-plotdata.Y = plotdata.Y(:,Xcopies,Zcopies);
+plotdata_Y = jit2multsave + minj2t;
+%plotdata.Y = plotdata.Y(:,Xcopies,Zcopies);
 
-plotdata.Z(1,1,:) = jit3multsave + minj3t;
-plotdata.Z = plotdata.Z(Ycopies,Xcopies,:);
-
+plotdata_Z(1,1,:) = jit3multsave + minj3t;
+%plotdata.Z = plotdata.Z(Ycopies,Xcopies,:);
+[plotdata.X,plotdata.Y,plotdata.Z] = meshgrid(plotdata_X,plotdata_Y,plotdata_Z);
 
 % Ideally, this part should be adapted to be able to handle any of
 % the dimensions being reduced to 0 (not just Z == Jitter3).
@@ -355,6 +356,7 @@ if ndims(plotdata.X) == 2
     surf(plotdata.X, plotdata.Y, eff_save_stimuli,'EdgeColor','none','LineStyle','none','FaceLighting','phong','FaceAlpha',0.6)
     hold on% I don't get it, but it needs reminding otherwise the plot is gone
     %highlight maximum
+    figure(fig2);
     plot3(plotdata.X(idx),plotdata.Y(idx),plotdata.Z(idx),'.r','markersize',20)
     
     figure(fig2);
@@ -366,6 +368,7 @@ elseif ndims(plotdata.X) == 3
     yslice = [plotdata.Y(end)];
     zslice = [plotdata.Z(1),plotdata.Z(1,1,zind)];
     
+    figure(fig2);
     slice(plotdata.X,plotdata.Y,plotdata.Z,eff_save_stimuli,xslice,yslice,zslice);
     cb = colorbar;                                  % create and label the colorbar
     cb.Label.String = 'Eficiency, a.u.';
@@ -420,7 +423,7 @@ end% of function updateMe
 
 %%=========================================================================
 % 
-% Copyright 2018 Vincent Schoots
+% Copyright [2018] [Vincent Schoots]
 %
 %    This is a MATLAB® script MEANT TO HELP OPTIMISE THE EFFICIENCY OF AN
 %    fMRI DESIGN. MatLab is proprietary software owned by MathWorks®.
