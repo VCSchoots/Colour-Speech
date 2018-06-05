@@ -1,4 +1,4 @@
-function [plotdata,idx,onsets] = EffDesign_ColourSpeech(dummy_trials,null_events,greenbool,nsim)
+function [plotdata,idx,onsets,designs] = EffDesign_ColourSpeech(dummy_trials,null_events,greenbool,nsim)
 
 %EFFDESIGN_COLOURSPEECH Test the effeciency of various jitter lengths.
 %   In order to test the optimal design for the Color and Speech project,
@@ -39,12 +39,13 @@ function [plotdata,idx,onsets] = EffDesign_ColourSpeech(dummy_trials,null_events
 %   steps. There are 3 jitters to optimise, so the nr. of iterations is nsim^3!
 %   Defaults to 10, so 1000 iterations.
 %
-%   [PLOTDATA,IDX,ONSETS] = EFFDESIGN_COLOURSPEECH(...) Outputs the data used in the
+%   [PLOTDATA,IDX,ONSETS,DESIGNS] = EFFDESIGN_COLOURSPEECH(...) Outputs the data used in the
 %   surface plots for later re-use, and the index of the highest efficiency
 %   design to find back the jitter 1 and jitter 2 values, and a structure
 %   called 'onsets' with all the green, red and overt speech onsets for all
 %   tested designs(one design per cell; the durations are always the same,
-%   and entered by the user here, and therefore not outputted).
+%   and entered by the user here, and therefore not outputted). And for
+%   plotting the modeled HRFs, look in the structure called designs.
 %
 
 addpath M:\General\Methodsy\Mumford_efficiency_tools
@@ -74,13 +75,13 @@ Resptime = 2;% Time (s) the response window lasts
 % the mode you set. The min. jitter is determined by the
 % values you enter here, and the max is set by MaxJitXRange (below).
 
-minj1t = .75;% .75 minimum jitter 1 (goes in between stimulus and speech cue)
-minj2t = .75;% .75 min jitter 2 (goes between trials)
-minj3t = 6;% 11.5 min jitter 3 (is the null events)
+minj1t = 2;% 2 minimum jitter 1 (goes in between stimulus and speech cue)
+minj2t = 2;% 2 min jitter 2 (goes between trials)
+minj3t = 12;% 12 min jitter 3 (is the null events)
 
-MaxJit1Range = 1;%[1] What is the max. range you want tested? (in s, max = min + MaxJitRange).
-MaxJit2Range = 12;%[1]
-MaxJit3Range = 12;%[1]
+MaxJit1Range = 1;%1 What is the max. range you want tested? (in s, max = min + MaxJitRange).
+MaxJit2Range = 1;%1
+MaxJit3Range = 0;%0
 
 % Do you want to include in the searchspace the scenario with no jitter,
 % where every ISI is equal to minjXt? (true) Or start searching from the first
@@ -147,7 +148,13 @@ end
 eff_save_1=zeros(nsim, 1);
 eff_save_2=zeros(nsim,1);
 
-for g=1:nsim% 'g'-loop, where jitter 3 is systematically varied
+if MaxJit3Range == 0% saving time in case the duration of null events is not jittered
+    nsim3 = 1;
+else
+    nsim3 = nsim;
+end
+
+for g=1:nsim3% 'g'-loop, where jitter 3 is systematically varied
     
     % Vary range and mean from small to L.
     if InclNoJit
@@ -407,7 +414,7 @@ hold off
 
 end% of function EffDesign_Colourspeech
 
-function msg = updateMe(src,evt,X,Y,Z,f,v)
+function msg = updateMe(src,evt,X,Y,Z,f,v)% The cursor info does not show the efficiency now if there is a 2d-plot.
 
 evt = get(evt); %what's happenin'?
 pos = evt.Position; %position
