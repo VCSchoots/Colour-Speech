@@ -52,6 +52,12 @@ addpath M:\General\Methodsy\Mumford_efficiency_tools
 % There is always a 500 ms Stimulus, then "Jitter 1", then 2000 ms response
 % window, then "Jitter 2". "Jitter 3" is for null events.
 
+% Set the number of simulations
+if ~exist('nsim','var')
+    nsim=1;% don't change for this version of the script
+end
+
+
 Stimtime = .5;% Time (s) the stimulus picture is on screen
 Resptime = 2;% Time (s) the response window lasts
 
@@ -139,43 +145,16 @@ else
 end
 
 for g=1:nsim3% 'g'-loop, where jitter 3 is systematically varied
-    
-    % Vary range and mean from small to L.
-    if InclNoJit
-        jit3multsave(g,1) = MaxJit3Range/(nsim-1) * (g-1);%from 0 to MaxJit3Range
-    elseif ~InclNoJit
-        jit3multsave(g,1) = MaxJit3Range/nsim * g;% from some small value to MaxJit3Range
-    else
-        error('Please provide a true or false value for parameter InclNoJit');
-    end
-    
-    jit3s = rand(1,sizj1t) * jit3multsave(g) + minj3t;
+       
+    jit3s = rand(1,sizj1t) * MaxJit3Range + minj3t;
     
     for h=1:nsim % 'h'-loop, where jitter 2 is systematically varied
-        
-        % Vary range and mean from small to L.
-        if InclNoJit
-            jit2multsave(h,1) = MaxJit2Range/(nsim-1) * (h-1);%from 0 to MaxJit2Range
-        elseif ~InclNoJit
-            jit2multsave(h,1) = MaxJit2Range/nsim * h;% from some small value to MaxJit2Range
-        else
-            error('Please provide a true or false value for parameter InclNoJit');
-        end
-        
-        jit2s = rand(1,sizj1t) * jit2multsave(h) + minj2t;
+               
+        jit2s = rand(1,sizj1t) * MaxJit2Range + minj2t;
         
         for j=1:nsim % 'j'-loop, where jitter 1 is systematically varied (all the regressors are built within this loop
             
-            % vary range and mean, small to L.
-            if InclNoJit
-                jit1multsave(j,1) = MaxJit1Range/(nsim-1) * (j-1);%from 0 to MaxJit1Range
-            elseif ~InclNoJit
-                jit1multsave(j,1) = MaxJit1Range/nsim * j;% from some small value to MaxJit2Range
-            else
-                error('Please provide a true or false value for parameter InclNoJit');
-            end
-            
-            jit1s = rand(1,sizj1t) * jit1multsave(j) + minj1t;
+            jit1s = rand(1,sizj1t) * MaxJit1Range + minj1t;
             
             %% make the time series of trial durations (jitter 1 and response
             %only come into play on an overt speech trial)
