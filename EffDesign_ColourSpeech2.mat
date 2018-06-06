@@ -1,9 +1,9 @@
-function [plotdata,idx,onsets,designs] = EffDesign_ColourSpeech2(dummy_trials,null_events,greenbool)
+function [onsets,designs,eff_save_stimuli,VIF] = EffDesign_ColourSpeech2(dummy_trials,null_events,greenbool)
 
 %EFFDESIGN_COLOURSPEECH2 Adapted version for testing through a single combi
 %of inputs at a time and save only the relevant stuff.
 %
-%   EFFDESIGN_COLOURSPEECH(DUMMY_TRIALS) Returns a plot of the most widely
+%   EFFDESIGN_COLOURSPEECH2(DUMMY_TRIALS) Returns a plot of the most widely
 %   spaced and most narrowly spaced design tested, along with a surface or
 %   volume plot of the detection efficiency for the green and the red trials and null events as a
 %   function of jitter parameter (e.g. short to long mean jitter).
@@ -18,25 +18,21 @@ function [plotdata,idx,onsets,designs] = EffDesign_ColourSpeech2(dummy_trials,nu
 %   In the absence of additional input arguments, the script makes
 %   an alternating sequence of green and red trials, starting with green.
 %
-%   EFFDESIGN_COLOURSPEECH(DUMMY_TRIALS,NULL_EVENTS) Accepts a
+%   EFFDESIGN_COLOURSPEECH2(DUMMY_TRIALS,NULL_EVENTS) Accepts a
 %   boolean vector null_events dictating after which trials to insert a
 %   null event. It can be longer than the actual design, the entries that
 %   come later than the last trial in the design are discarded.
 %
-%   EFFDESIGN_COLOURSPEECH(DUMMY_TRIALS,NULL_EVENTS,GREENBOOL) Accepts a user-sepcified
+%   EFFDESIGN_COLOURSPEECH2(DUMMY_TRIALS,NULL_EVENTS,GREENBOOL) Accepts a user-sepcified
 %   boolean that dictates the order of the green and red stimuli. If you do
 %   not want null events but do want to provide greenbool, please provide a
 %   long vector of boolean zeros for null_events (also see MatLab help on
 %   function boolean() ).
 %
-%   [PLOTDATA,IDX,ONSETS,DESIGNS] = EFFDESIGN_COLOURSPEECH(...) Outputs the data used in the
-%   surface plots for later re-use, and the index of the highest efficiency
-%   design to find back the jitter 1 and jitter 2 values, and a structure
+%   [ONSETS,DESIGNS,EFF_SAVE_STIMULI,VIF] = EFFDESIGN_COLOURSPEECH(...) Outputs a structure
 %   called 'onsets' with all the green, red and overt speech onsets for all
-%   tested designs(one design per cell; the durations are always the same,
-%   and entered by the user here, and therefore not outputted). And for
-%   plotting the modeled HRFs, look in the structure called designs.
-%
+%   tested designs. And for plotting the modeled HRFs, look in the structure called designs.
+%   Eff_save_stimuli is the efficiency, VIF is the VIF of the design.
 
 addpath M:\General\Methodsy\Mumford_efficiency_tools
 %edit the above path to point towards the directory with spm_hrf in it.
@@ -144,163 +140,124 @@ else
     nsim3 = nsim;
 end
 
-for g=1:nsim3% 'g'-loop, where jitter 3 is systematically varied
-       
-    jit3s = rand(1,sizj1t) * MaxJit3Range + minj3t;
-    
-    for h=1:nsim % 'h'-loop, where jitter 2 is systematically varied
-               
-        jit2s = rand(1,sizj1t) * MaxJit2Range + minj2t;
-        
-        for j=1:nsim % 'j'-loop, where jitter 1 is systematically varied (all the regressors are built within this loop
-            
-            jit1s = rand(1,sizj1t) * MaxJit1Range + minj1t;
-            
-            %% make the time series of trial durations (jitter 1 and response
-            %only come into play on an overt speech trial)
-            
-            % Dummy trials need to be inserted in between the normal
-            % trials. That means, 'glued to the end of a trial' after jitter 2s. We first set all
-            % jitter3s to 0s in the places where no null trial is, then add
-            % the whole list of null trials (most of which now have
-            % duration 0) to the design.
-            j3_use = zeros(size(jit3s));
-            j3_use(null_events) = jit3s(null_events);
-            
-            % !! If we want to be able to model null events, we have to set
-            % some form of marker in the design, which cannot exist on the
-            % ones set to duration 0 here. !!
-            
-            % add resp. time to jit1s and use only on NON-overt speech
-            % trials (i.e. normal trials), setting the rest to 0.
-            jit1plusresp = jit1s + Resptime;
-            j1pr_use = zeros(size(jit1plusresp));
-            j1pr_use(dummy_trials) = jit1plusresp(dummy_trials);
-            
-            % trialdurs (below) takes into account all the eventualities (dummy trials and null trials both might or might not be at a given trial)
-            trialdurs = Stimtime + j1pr_use + jit2s + j3_use;% trialdurs is in seconds
-            %make the time series of trial onsets, might be longer than
-            %greenbool. trialonsets is being constructed from trial
-            %durations, so it does not run the risk of having missed
-            %something.
-            trialonsets = [0 cumsum(trialdurs(1:end-1))];% trialonsets is in seconds
-            
-            t4b = trialonsets(null_events) + Stimtime + j1pr_use(null_events) + jit2s(null_events);% j1pr_use(null_events) takes the jitter 1 plus resp (0 if not a dummy trial) only for this specific null trial.
-            onsets.null{h,j,g} = t4b(t4b <= endtime);
-            
-            if length(greenbool) > length(trialonsets)
-                % Here, the greenbool gets cut to size if it was too long.
-                tmpgreenbool = greenbool(1:length(trialonsets));
-            else
-                tmpgreenbool = greenbool;
-            end% If it is too short, the last part of the design will be empty.
-            
-            t1b = trialonsets(tmpgreenbool);% only the onsets of green trials
-            onsets.green{h,j,g} = t1b(t1b <= endtime);% cut to size seperately because it needs to be saved
-            r1 = zeros(1, endtime*4+1);% create an empty regressor at 4Hz sampling rate.
-            
-            for i=1:length(t1b)% what happens to the trials that do not fit onto r1b any more? --> They disappear from view, because in the part "t1b(i)<=t & t<=(t1b(i)+Stimtime" any element of t1b that is higher than the endtime anyway is not considered.
-                r1(t1b(i)<=t & t<=(t1b(i)+Stimtime))=1;  %add .5 for a 500ms duration, or whatever your stimulus time is.
-            end
-            
-            r1_save{h,j,g} = (r1(1:4*TR:4*endtime)/5)-.2;% Resampling at the TR, div by 5 and minus .2 for plotting.
-            
-            r1b=conv(hrf_25, r1);
-            r1b=r1b(1:4*TR:4*endtime);% Resampling at the TR.
-            r1b=r1b-mean(r1b);% mean centering is an alternative for including a regressor of ones into your design matrix.
-            
-            t2b = trialonsets(~tmpgreenbool);% any non-green is red. BUT: where greenbool is not present (indices later than greenbool) I guess this defaults to '1'?
-            onsets.red{h,j,g} = t2b(t2b <= endtime);% cut to size seperately because it needs to be saved
-            r2 = zeros(1, endtime*4+1);
-            
-            for i=1:length(t2b)
-                r2(t2b(i)<=t & t<=(t2b(i) + Stimtime))=1;  %add Stimtime for its duration
-            end
-            
-            r2_save{h,j,g} = (r2(1:4*TR:4*endtime)/5)-.2;
-            
-            r2b=conv(hrf_25, r2);
-            r2b=r2b(1:4*TR:4*endtime);
-            r2b=r2b-mean(r2b);
-            
-            % speech regressor: only on some of the trials.
-            % after trial onset, the stimulus and jitter 1 happen before this one.
-            t3b = trialonsets(dummy_trials) + Stimtime + jit1s(dummy_trials);
-            onsets.overt{h,j,g} = t3b(t3b <= endtime);% cut to size seperately because it needs to be saved
-            r3 = zeros(1, endtime*4+1);
-            
-            for i=1:length(t3b)%  Even though t3b is probably longer than the nr of trials needed,
-                % r3b ends up the right length because t does
-                % not run beyond the end time of the
-                % experiment.
-                r3(t3b(i)<=t & t<=(t3b(i) + Resptime))=1;  %add Resptime for its duration
-            end
-            
-            r3_save{h,j,g} = (r3(1:4*TR:4*endtime)/5)-.2;
-            
-            r3b=conv(hrf_25, r3);
-            r3b=r3b(1:4*TR:4*endtime);
-            r3b=r3b-mean(r3b);
-            
-            designs.green_regr{h,j,g} = r1b;
-            designs.red_regr{h,j,g} = r2b;
-            designs.overt_regr{h,j,g} = r3b;
-            % there is no r4b because the null events are not modelled
-            
-            Xb=[r1b', r2b', r3b'];
-            c1=[1 0 0];
-            c2=[0 1 0];
-            
-            eff_save_1(h,j,g)=1./(c1*inv(Xb'*Xb)*c1');% here is the formula for calculating efficiency.
-            eff_save_2(h,j,g)=1./(c2*inv(Xb'*Xb)*c2');
-            eff_save_stimuli(h,j,g)=2./(c1*inv(Xb'*Xb)*c1'+c2*inv(Xb'*Xb)*c2');
-            
-            % also get the Variance Inflation Factor
-            R0 = corrcoef(Xb);
-            VIF(h,j,g) = max(diag(inv(R0))');% max is a little misleading in relation to the cursor updating thing
-            
-        end% of 'j'-loop, where jitter 1 is systematically varied
-    end% of 'h'-loop, where jitter 2 is systematically varied
-end% of 'g'-loop, where jitter 3 is systematically varied
 
-plotdata_X = jit1multsave' + minj1t;
-%plotdata.X = plotdata.X(Ycopies,:,Zcopies);
+jit3s = rand(1,sizj1t) * MaxJit3Range + minj3t;
 
-plotdata_Y = jit2multsave + minj2t;
-%plotdata.Y = plotdata.Y(:,Xcopies,Zcopies);
 
-plotdata_Z(1,1,:) = jit3multsave + minj3t;
-%plotdata.Z = plotdata.Z(Ycopies,Xcopies,:);
-[plotdata.X,plotdata.Y,plotdata.Z] = meshgrid(plotdata_X,plotdata_Y,plotdata_Z);
+jit2s = rand(1,sizj1t) * MaxJit2Range + minj2t;
 
-% Ideally, this part should be adapted to be able to handle any of
-% the dimensions being reduced to 0 (not just Z == Jitter3).
-if all(plotdata.Z(:) == plotdata.Z(1))% if all z are equal baceuse you set MaxJit3Range to 0.
-    plotdata.X = plotdata.X(:,:,1);
-    plotdata.Y = plotdata.Y(:,:,1);
-    plotdata.Z = plotdata.Z(:,:,1);
-    eff_save_stimuli = eff_save_stimuli(:,:,1);
+
+jit1s = rand(1,sizj1t) * MaxJit1Range + minj1t;
+
+%% make the time series of trial durations (jitter 1 and response
+%only come into play on an overt speech trial)
+
+% Dummy trials need to be inserted in between the normal
+% trials. That means, 'glued to the end of a trial' after jitter 2s. We first set all
+% jitter3s to 0s in the places where no null trial is, then add
+% the whole list of null trials (most of which now have
+% duration 0) to the design.
+j3_use = zeros(size(jit3s));
+j3_use(null_events) = jit3s(null_events);
+
+% !! If we want to be able to model null events, we have to set
+% some form of marker in the design, which cannot exist on the
+% ones set to duration 0 here. !!
+
+% add resp. time to jit1s and use only on NON-overt speech
+% trials (i.e. normal trials), setting the rest to 0.
+jit1plusresp = jit1s + Resptime;
+j1pr_use = zeros(size(jit1plusresp));
+j1pr_use(dummy_trials) = jit1plusresp(dummy_trials);
+
+% trialdurs (below) takes into account all the eventualities (dummy trials and null trials both might or might not be at a given trial)
+trialdurs = Stimtime + j1pr_use + jit2s + j3_use;% trialdurs is in seconds
+%make the time series of trial onsets, might be longer than
+%greenbool. trialonsets is being constructed from trial
+%durations, so it does not run the risk of having missed
+%something.
+trialonsets = [0 cumsum(trialdurs(1:end-1))];% trialonsets is in seconds
+
+t4b = trialonsets(null_events) + Stimtime + j1pr_use(null_events) + jit2s(null_events);% j1pr_use(null_events) takes the jitter 1 plus resp (0 if not a dummy trial) only for this specific null trial.
+onsets.null = t4b(t4b <= endtime);
+
+if length(greenbool) > length(trialonsets)
+    % Here, the greenbool gets cut to size if it was too long.
+    tmpgreenbool = greenbool(1:length(trialonsets));
+else
+    tmpgreenbool = greenbool;
+end% If it is too short, the last part of the design will be empty.
+
+t1b = trialonsets(tmpgreenbool);% only the onsets of green trials
+onsets.green = t1b(t1b <= endtime);% cut to size seperately because it needs to be saved
+r1 = zeros(1, endtime*4+1);% create an empty regressor at 4Hz sampling rate.
+
+for i=1:length(t1b)% what happens to the trials that do not fit onto r1b any more? --> They disappear from view, because in the part "t1b(i)<=t & t<=(t1b(i)+Stimtime" any element of t1b that is higher than the endtime anyway is not considered.
+    r1(t1b(i)<=t & t<=(t1b(i)+Stimtime))=1;  %add .5 for a 500ms duration, or whatever your stimulus time is.
 end
 
-idx = find(eff_save_stimuli == max(max(max(eff_save_stimuli))));
-[xind,yind,zind] = ind2sub(size(eff_save_stimuli),idx);
+r1_save = (r1(1:4*TR:4*endtime)/5)-.2;% Resampling at the TR, div by 5 and minus .2 for plotting.
 
-if length(xind) > 1
-    xind = xind(floor(length(xind)/2));%in case there is more than one maximum, one is picked for the slice
-end
-if length(yind) > 1
-    yind = yind(floor(length(yind)/2));%in case there is more than one maximum, one is picked for the slice
-end
-if length(zind) > 1
-    zind = zind(floor(length(zind)/2));
+r1b=conv(hrf_25, r1);
+r1b=r1b(1:4*TR:4*endtime);% Resampling at the TR.
+r1b=r1b-mean(r1b);% mean centering is an alternative for including a regressor of ones into your design matrix.
+
+t2b = trialonsets(~tmpgreenbool);% any non-green is red. BUT: where greenbool is not present (indices later than greenbool) I guess this defaults to '1'?
+onsets.red = t2b(t2b <= endtime);% cut to size seperately because it needs to be saved
+r2 = zeros(1, endtime*4+1);
+
+for i=1:length(t2b)
+    r2(t2b(i)<=t & t<=(t2b(i) + Stimtime))=1;  %add Stimtime for its duration
 end
 
+r2_save = (r2(1:4*TR:4*endtime)/5)-.2;
 
-end% of function EffDesign_Colourspeech
+r2b=conv(hrf_25, r2);
+r2b=r2b(1:4*TR:4*endtime);
+r2b=r2b-mean(r2b);
+
+% speech regressor: only on some of the trials.
+% after trial onset, the stimulus and jitter 1 happen before this one.
+t3b = trialonsets(dummy_trials) + Stimtime + jit1s(dummy_trials);
+onsets.overt = t3b(t3b <= endtime);% cut to size seperately because it needs to be saved
+r3 = zeros(1, endtime*4+1);
+
+for i=1:length(t3b)%  Even though t3b is probably longer than the nr of trials needed,
+    % r3b ends up the right length because t does
+    % not run beyond the end time of the
+    % experiment.
+    r3(t3b(i)<=t & t<=(t3b(i) + Resptime))=1;  %add Resptime for its duration
+end
+
+r3_save = (r3(1:4*TR:4*endtime)/5)-.2;
+
+r3b=conv(hrf_25, r3);
+r3b=r3b(1:4*TR:4*endtime);
+r3b=r3b-mean(r3b);
+
+designs.green_regr = r1b;
+designs.red_regr = r2b;
+designs.overt_regr = r3b;
+% there is no r4b because the null events are not modelled
+
+Xb=[r1b', r2b', r3b'];
+c1=[1 0 0];
+c2=[0 1 0];
+
+eff_save_1=1./(c1*inv(Xb'*Xb)*c1');% here is the formula for calculating efficiency.
+eff_save_2=1./(c2*inv(Xb'*Xb)*c2');
+eff_save_stimuli=2./(c1*inv(Xb'*Xb)*c1'+c2*inv(Xb'*Xb)*c2');
+
+% also get the Variance Inflation Factor
+R0 = corrcoef(Xb);
+VIF = max(diag(inv(R0))');% max is a little misleading in relation to the cursor updating thing
+
+
+end% of function EffDesign_Colourspeech2
 
 
 %%=========================================================================
-% 
+%
 % Copyright [2018] [Vincent Schoots]
 %
 %    This is a MATLAB® script MEANT TO HELP OPTIMISE THE EFFICIENCY OF AN
@@ -310,13 +267,13 @@ end% of function EffDesign_Colourspeech
 %    https://www.dropbox.com/sh/zp4foawa4c5w5rr/AAAfQ0mv-CHKj1c63ihC-ZBca?dl=0
 %    With the accompanying tutorial video
 %    https://www.youtube.com/watch?v=xr20ajRNkAI
-% 
+%
 %    Licensed under the Apache License, Version 2.0 (the "License");
 %    you may not use this file except in compliance with the License.
 %    You may obtain a copy of the License at
-% 
+%
 %        http://www.apache.org/licenses/LICENSE-2.0
-% 
+%
 %    Unless required by applicable law or agreed to in writing, software
 %    distributed under the License is distributed on an "AS IS" BASIS,
 %    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
