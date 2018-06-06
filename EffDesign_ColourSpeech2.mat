@@ -1,4 +1,4 @@
-function [onsets,designs,eff_save_stimuli,VIF] = EffDesign_ColourSpeech2(dummy_trials,null_events,greenbool)
+function [onsets,Xb,eff_save_stimuli,VIF] = EffDesign_ColourSpeech2(dummy_trials,null_events,greenbool)
 
 %EFFDESIGN_COLOURSPEECH2 Adapted version for testing through a single combi
 %of inputs at a time and save only the relevant stuff.
@@ -29,9 +29,10 @@ function [onsets,designs,eff_save_stimuli,VIF] = EffDesign_ColourSpeech2(dummy_t
 %   long vector of boolean zeros for null_events (also see MatLab help on
 %   function boolean() ).
 %
-%   [ONSETS,DESIGNS,EFF_SAVE_STIMULI,VIF] = EFFDESIGN_COLOURSPEECH(...) Outputs a structure
+%   [ONSETS,DESIGN,EFF_SAVE_STIMULI,VIF] = EFFDESIGN_COLOURSPEECH(...) Outputs a structure
 %   called 'onsets' with all the green, red and overt speech onsets for all
-%   tested designs. And for plotting the modeled HRFs, look in the structure called designs.
+%   tested designs. Xb contains the design matrix for green stimuli, red
+%   stimuli and speech cues.
 %   Eff_save_stimuli is the efficiency, VIF is the VIF of the design.
 
 addpath M:\General\Methodsy\Mumford_efficiency_tools
@@ -234,11 +235,6 @@ r3_save = (r3(1:4*TR:4*endtime)/5)-.2;
 r3b=conv(hrf_25, r3);
 r3b=r3b(1:4*TR:4*endtime);
 r3b=r3b-mean(r3b);
-
-designs.green_regr = r1b;
-designs.red_regr = r2b;
-designs.overt_regr = r3b;
-% there is no r4b because the null events are not modelled
 
 Xb=[r1b', r2b', r3b'];
 c1=[1 0 0];
