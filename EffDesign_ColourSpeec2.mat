@@ -1,0 +1,304 @@
+function [onsets,Xb,eff_save_stimuli,VIF,presentationInput] = EffDesign_ColourSpeech2(dummy_trials,null_events,trialorder)
+
+%EFFDESIGN_COLOURSPEECH3 Passes on the jitter times and the individual
+%trial info.
+%
+%   EFFDESIGN_COLOURSPEECH3(DUMMY_TRIALS) Returns a plot of the most widely
+%   spaced and most narrowly spaced design tested, along with a surface or
+%   volume plot of the detection efficiency for the green and the red trials and null events as a
+%   function of jitter parameter (e.g. short to long mean jitter).
+%
+%   It requires the input argument dummy_trials, a boolean vector saying
+%   which trials to treat as
+%   trials of non-interest (coded as 1s), in which overt speech is
+%   produced. It is intended to simply be much longer than the nr of trials
+%   in the design. If you supply all 1s, you get a design where overt
+%   speech is required on every trial.
+%
+%   In the absence of additional input arguments, the script makes
+%   an alternating sequence of green and red trials, starting with green.
+%
+%   EFFDESIGN_COLOURSPEECH2(DUMMY_TRIALS,NULL_EVENTS) Accepts a
+%   boolean vector null_events dictating after which trials to insert a
+%   null event. It can be longer than the actual design, the entries that
+%   come later than the last trial in the design are discarded.
+%
+%   EFFDESIGN_COLOURSPEECH2(DUMMY_TRIALS,NULL_EVENTS,GREENBOOL) Accepts a user-sepcified
+%   boolean that dictates the order of the green and red stimuli. If you do
+%   not want null events but do want to provide greenbool, please provide a
+%   long vector of boolean zeros for null_events (also see MatLab help on
+%   function boolean() ).
+%
+%   [ONSETS,DESIGN,EFF_SAVE_STIMULI,VIF, PRESENTATIONINPUT] = EFFDESIGN_COLOURSPEECH(...) Outputs a structure
+%   called 'onsets' with all the green, red and overt speech onsets for all
+%   tested designs. Xb contains the design matrix for green stimuli, red
+%   stimuli and speech cues.
+%   Eff_save_stimuli is the efficiency, VIF is the VIF of the design.
+%   PresentationInput is a cell array of tables with info for Presentation.
+
+addpath M:\General\Methodsy\Mumford_efficiency_tools
+%edit the above path to point towards the directory with spm_hrf in it.
+
+%% -------DEFINITIONS---------
+% There are 3*2 conditions in my design:
+% [Semantic Judgment, Object Naming, Colour Naming] * [Red, Green].
+% these will be presented in blocks, the colours event-related.
+% The objective of the script is to estimate the efficiency of different
+% sequences and jitters, and hopefully to find the best one. This is done
+% for one condition (e.g. Semantic Judgment) because the next run will need
+% to have a separate sequence.
+% There is always a 500 ms Stimulus, then "Jitter 1", then 2000 ms response
+% window, then "Jitter 2". "Jitter 3" is for null events.
+
+% Set the number of simulations
+if ~exist('nsim','var')
+    nsim=1;% don't change for this version of the script
+end
+
+
+Stimtime = .5;% Time (s) the stimulus picture is on screen
+Resptime = 2;% Time (s) the response window lasts
+
+% The parameters set there might or might not be overwritten, depending on
+% the mode you set. The min. jitter is determined by the
+% values you enter here, and the max is set by MaxJitXRange (below).
+
+minj1t = 1.5;% 1.5 minimum jitter 1 (goes in between stimulus and speech cue)
+minj2t = 1.5;% 1.5 min jitter 2 (goes between trials)
+minj3t = 11.5;% 11.5 min jitter 3 (is the null events)
+
+MaxJit1Range = 1;%1 What is the max. range you want tested? (in s, max = min + MaxJitRange).
+MaxJit2Range = 1;%1
+MaxJit3Range = 1;%1
+
+% Do you want to include in the searchspace the scenario with no jitter,
+% where every ISI is equal to minjXt? (true) Or start searching from the first
+% actual jitter? (false)
+InclNoJit = false;
+
+%create each trial in high resolution, convolve and then I'll downsample to
+%a TR of 2 seconds.
+TR=2;
+
+% How many seconds to we have available? (Most practical to enter
+% [minutes*60]
+
+% GET RID OF ENDTIME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+endtime = 30*60;% Note that this term dictates the length of greenbool.
+%                 If greenbool was longer than fits in endtime, it is cut
+%                 off, and fewer trials are included than were in
+%                 greenbool. If it was shorter, part of the design remains
+%                 empty. This messes up the design and so should be avoided.
+
+t=0:0.25:endtime;
+hrf_25=spm_hrf(0.25);
+rng('shuffle');% important to ensure truly random results from the random generator
+
+% ---------- END Of DEFINITIIONS ------------
+
+TrialNr(:) = 1:length(trialorder);% for presentation output
+
+%% Let's make a design with jitter.
+
+%mintrialdur = sum([Stimtime minj1t Resptime minj2t]); % old version where
+%there was overt speech on every trial
+mintrialdur = sum([Stimtime minj2t]);
+
+%sizj1t = ceil(endtime/mintrialdur);% maximum nr of trials needed to fill the time
+
+%% Translating input to variables for the Presentation stimulus/timing list.
+
+greenbool = boolean(trialorder<6);% Keeping the trialorder for output, making greenbool for efficiency calculation. 1-5 = green.
+sizgrb = size(greenbool);
+
+Colour = cell(sizgrb);
+Colour(greenbool) = {'g'};
+Colour(~greenbool) = {'r'};
+
+stimlist = {'cactus','frog','crocodile','tank','turtle','tomato','strawberry','cherry','lobster','fire_truck'};
+Object = stimlist(trialorder);
+
+%% Determining the order of the stimuli
+
+if ~exist('greenbool','var')
+    warning('''greenbool'' input was not provided; generating an alternating sequence of green/red trials.')
+    greenbool = zeros(1,sizgrb); greenbool(1:2:end) = 1;%alternate [1 0 1 ...]
+    
+    % If you want to try randomly permuting:
+    %     rng('shuffle');% to get a different sequence every time
+    %     greenbool = greenbool(randperm(length(greenbool)));
+    
+    greenbool = boolean(greenbool);
+elseif exist('greenbool','var')
+    if length(greenbool) == sizgrb
+    elseif length(greenbool) < sizgrb
+        warning('Length of greenbool is %d, length of max nr of trials is %d. Part of the design might remain empty.',length(greenbool),sizgrb)
+    else%if length(greenbool) > sizgrb
+        warning('Length of greenbool is %d, length of max nr of trials is %d. Trials after the max. time will not end up in the design.',length(greenbool),sizgrb)
+    end
+end
+
+dummy_trials = dummy_trials(dummy_trials <= sizgrb(2));%culling to size
+
+Speech = cell(sizgrb);
+Speech(:) = {'no'};
+Speech(dummy_trials) = {'yes'};
+
+if exist('null_events','var')
+    null_events = null_events(null_events <= sizgrb(2));
+else
+    null_events = boolean(zeros(sizgrb));% Assume the user wants no null events.
+end
+
+%% -------------from here on, we look to optimise the jitter--------
+
+eff_save_1=zeros(nsim, 1);
+eff_save_2=zeros(nsim,1);
+
+if MaxJit3Range == 0% saving time in case the duration of null events is not jittered
+    nsim3 = 1;
+else
+    nsim3 = nsim;
+end
+
+jitter3_raw = rand(sizgrb) * MaxJit3Range + minj3t;
+jitter2 = rand(sizgrb) * MaxJit2Range + minj2t;
+jitter1 = rand(sizgrb) * MaxJit1Range + minj1t;
+
+%% make the time series of trial durations (jitter 1 and response
+%only come into play on an overt speech trial)
+
+% Dummy trials need to be inserted in between the normal
+% trials. That means, 'glued to the end of a trial' after jitter 2s. We first set all
+% jitter3s to 0s in the places where no null trial is, then add
+% the whole list of null trials (most of which now have
+% duration 0) to the design.
+jitter3 = zeros(size(jitter3_raw));
+jitter3(null_events) = jitter3_raw(null_events);
+
+% !! If we want to be able to model null events, we have to set
+% some form of marker in the design, which cannot exist on the
+% ones set to duration 0 here. !!
+
+% add resp. time to jitter1 and use only on NON-overt speech
+% trials (i.e. normal trials), setting the rest to 0.
+jit1plusresp = jitter1 + Resptime;
+j1pr_use = zeros(size(jit1plusresp));
+j1pr_use(dummy_trials) = jit1plusresp(dummy_trials);
+
+% trialdurs (below) takes into account all the eventualities (dummy trials and null trials both might or might not be at a given trial)
+trialdurs = Stimtime + j1pr_use + jitter2 + jitter3;% trialdurs is in seconds
+%make the time series of trial onsets, might be longer than
+%greenbool. trialonsets is being constructed from trial
+%durations, so it does not run the risk of having missed
+%something.
+trialonsets = [0 cumsum(trialdurs(1:end-1))];% trialonsets is in seconds
+
+t4b = trialonsets(null_events) + Stimtime + j1pr_use(null_events) + jitter2(null_events);% j1pr_use(null_events) takes the jitter 1 plus resp (0 if not a dummy trial) only for this specific null trial.
+onsets.null = t4b(t4b <= endtime);
+
+if length(greenbool) > length(trialonsets)
+    % Here, the greenbool gets cut to size if it was too long.
+    tmpgreenbool = greenbool(1:length(trialonsets));
+else
+    tmpgreenbool = greenbool;
+end% If it is too short, the last part of the design will be empty.
+
+t1b = trialonsets(tmpgreenbool);% only the onsets of green trials
+onsets.green = t1b(t1b <= endtime);% cut to size seperately because it needs to be saved
+r1 = zeros(1, endtime*4+1);% create an empty regressor at 4Hz sampling rate.
+
+for i=1:length(t1b)% what happens to the trials that do not fit onto r1b any more? --> They disappear from view, because in the part "t1b(i)<=t & t<=(t1b(i)+Stimtime" any element of t1b that is higher than the endtime anyway is not considered.
+    r1(t1b(i)<=t & t<=(t1b(i)+Stimtime))=1;  %add .5 for a 500ms duration, or whatever your stimulus time is.
+end
+
+r1_save = (r1(1:4*TR:4*endtime)/5)-.2;% Resampling at the TR, div by 5 and minus .2 for plotting.
+
+r1b=conv(hrf_25, r1);
+r1b=r1b(1:4*TR:4*endtime);% Resampling at the TR.
+r1b=r1b-mean(r1b);% mean centering is an alternative for including a regressor of ones into your design matrix.
+
+t2b = trialonsets(~tmpgreenbool);% any non-green is red. BUT: where greenbool is not present (indices later than greenbool) I guess this defaults to '1'?
+onsets.red = t2b(t2b <= endtime);% cut to size seperately because it needs to be saved
+r2 = zeros(1, endtime*4+1);
+
+for i=1:length(t2b)
+    r2(t2b(i)<=t & t<=(t2b(i) + Stimtime))=1;  %add Stimtime for its duration
+end
+
+r2_save = (r2(1:4*TR:4*endtime)/5)-.2;
+
+r2b=conv(hrf_25, r2);
+r2b=r2b(1:4*TR:4*endtime);
+r2b=r2b-mean(r2b);
+
+% speech regressor: only on some of the trials.
+% after trial onset, the stimulus and jitter 1 happen before this one.
+t3b = trialonsets(dummy_trials) + Stimtime + jitter1(dummy_trials);
+onsets.overt = t3b(t3b <= endtime);% cut to size seperately because it needs to be saved
+r3 = zeros(1, endtime*4+1);
+
+for i=1:length(t3b)%  Even though t3b is probably longer than the nr of trials needed,
+    % r3b ends up the right length because t does
+    % not run beyond the end time of the
+    % experiment.
+    r3(t3b(i)<=t & t<=(t3b(i) + Resptime))=1;  %add Resptime for its duration
+end
+
+r3_save = (r3(1:4*TR:4*endtime)/5)-.2;
+
+r3b=conv(hrf_25, r3);
+r3b=r3b(1:4*TR:4*endtime);
+r3b=r3b-mean(r3b);
+
+Xb=[r1b', r2b', r3b'];
+c1=[1 0 0];
+c2=[0 1 0];
+
+eff_save_1=1./(c1*inv(Xb'*Xb)*c1');% here is the formula for calculating efficiency.
+eff_save_2=1./(c2*inv(Xb'*Xb)*c2');
+eff_save_stimuli=2./(c1*inv(Xb'*Xb)*c1'+c2*inv(Xb'*Xb)*c2');
+
+% also get the Variance Inflation Factor
+R0 = corrcoef(Xb);
+VIF = max(diag(inv(R0))');% max is a little misleading in relation to the cursor updating thing
+
+% Convert jitter3 to Presentation input format
+temp3 = num2cell(jitter3);
+temp3(~jitter3) = {'na'};
+jitter3 = temp3';
+
+jitter2 = jitter2';
+jitter1 = jitter1';
+Speech = Speech';
+Object = Object';
+Colour = Colour';
+TrialNr = TrialNr';
+
+presentationInput = table(TrialNr,Colour,Object,Speech,jitter1,jitter2,jitter3);
+
+end% of function EffDesign_Colourspeech3
+
+%%=========================================================================
+%
+% Copyright 2018 Vincent Schoots
+%
+%    This is a MATLABï¿½ script MEANT TO HELP OPTIMISE THE EFFICIENCY OF AN
+%    fMRI DESIGN. MatLab is proprietary software owned by MathWorksï¿½.
+%    This script is built off of a tutorial on efficiency calculation by
+%    Dr. Jeanette Mumford, available here
+%    https://www.dropbox.com/sh/zp4foawa4c5w5rr/AAAfQ0mv-CHKj1c63ihC-ZBca?dl=0
+%    With the accompanying tutorial video
+%    https://www.youtube.com/watch?v=xr20ajRNkAI
+%
+%    Licensed under the Apache License, Version 2.0 (the "License");
+%    you may not use this file except in compliance with the License.
+%    You may obtain a copy of the License at
+%
+%        http://www.apache.org/licenses/LICENSE-2.0
+%
+%    Unless required by applicable law or agreed to in writing, software
+%    distributed under the License is distributed on an "AS IS" BASIS,
+%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%    See the License for the specific language governing permissions and
+%    limitations under the License.
