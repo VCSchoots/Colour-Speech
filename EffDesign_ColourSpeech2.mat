@@ -1,6 +1,6 @@
 function [onsets,Xb,eff_save_stimuli,VIF,presentationInput] = EffDesign_ColourSpeech2(dummy_trials,null_events,trialorder)
 
-%EFFDESIGN_COLOURSPEECH3 Passes on the jitter times and the individual
+%EFFDESIGN_COLOURSPEECH2 Passes on the jitter times and the individual
 %trial info.
 %
 %   EFFDESIGN_COLOURSPEECH3(DUMMY_TRIALS) Returns a plot of the most widely
@@ -50,11 +50,17 @@ addpath M:\General\Methodsy\Mumford_efficiency_tools
 % There is always a 500 ms Stimulus, then "Jitter 1", then 2000 ms response
 % window, then "Jitter 2". "Jitter 3" is for null events.
 
+% When reading this script, bear in mind that it generates multiple
+% representations of the same series of trials, which might sometimes be
+% confusing. Onsets and durations speak for themselves, Xb contains the
+% expected HRF timeseries in response to the stimuli, for use in the
+% efficiency calculation. presentationInput is yet another format, which
+% requires one entry per trial.
+
 % Set the number of simulations
 if ~exist('nsim','var')
     nsim=1;% don't change for this version of the script
 end
-
 
 Stimtime = .5;% Time (s) the stimulus picture is on screen
 Resptime = 2;% Time (s) the response window lasts
@@ -70,11 +76,6 @@ minj3t = 11.5;% 11.5 min jitter 3 (is the null events)
 MaxJit1Range = 1;%1 What is the max. range you want tested? (in s, max = min + MaxJitRange).
 MaxJit2Range = 1;%1
 MaxJit3Range = 1;%1
-
-% Do you want to include in the searchspace the scenario with no jitter,
-% where every ISI is equal to minjXt? (true) Or start searching from the first
-% actual jitter? (false)
-InclNoJit = false;
 
 %create each trial in high resolution, convolve and then I'll downsample to
 %a TR of 2 seconds.
@@ -98,13 +99,6 @@ rng('shuffle');% important to ensure truly random results from the random genera
 
 TrialNr(:) = 1:length(trialorder);% for presentation output
 
-%% Let's make a design with jitter.
-
-%mintrialdur = sum([Stimtime minj1t Resptime minj2t]); % old version where
-%there was overt speech on every trial
-mintrialdur = sum([Stimtime minj2t]);
-
-%sizj1t = ceil(endtime/mintrialdur);% maximum nr of trials needed to fill the time
 
 %% Translating input to variables for the Presentation stimulus/timing list.
 
@@ -155,17 +149,20 @@ end
 eff_save_1=zeros(nsim, 1);
 eff_save_2=zeros(nsim,1);
 
-if MaxJit3Range == 0% saving time in case the duration of null events is not jittered
+if MaxJit3Range == 0% saving computation time in case the duration of null events is not jittered
     nsim3 = 1;
 else
     nsim3 = nsim;
 end
 
+% The ones with the addition "_raw" will not appear on every trial, and so
+% in a later step, we select from the generated series only at the index
+% where a null trial or a speech trial happens.
 jitter3_raw = rand(sizgrb) * MaxJit3Range + minj3t;
 jitter2 = rand(sizgrb) * MaxJit2Range + minj2t;
-jitter1 = rand(sizgrb) * MaxJit1Range + minj1t;
+jitter1_raw = rand(sizgrb) * MaxJit1Range + minj1t;
 
-%% make the time series of trial durations (jitter 1 and response
+%% make the time series of trial durations (jitter 1 and response should
 %only come into play on an overt speech trial)
 
 % Dummy trials need to be inserted in between the normal
@@ -176,15 +173,13 @@ jitter1 = rand(sizgrb) * MaxJit1Range + minj1t;
 jitter3 = zeros(size(jitter3_raw));
 jitter3(null_events) = jitter3_raw(null_events);
 
-% !! If we want to be able to model null events, we have to set
-% some form of marker in the design, which cannot exist on the
-% ones set to duration 0 here. !!
-
 % add resp. time to jitter1 and use only on NON-overt speech
 % trials (i.e. normal trials), setting the rest to 0.
-jit1plusresp = jitter1 + Resptime;
-j1pr_use = zeros(size(jit1plusresp));
-j1pr_use(dummy_trials) = jit1plusresp(dummy_trials);
+jitter1 = zeros(size(jitter1_raw));
+jitter1(dummy_trials) = jitter1_raw(dummy_trials);
+
+j1pr_use = zeros(size(jitter1_raw));
+j1pr_use(dummy_trials) = jitter1(dummy_trials) + Resptime;
 
 % trialdurs (below) takes into account all the eventualities (dummy trials and null trials both might or might not be at a given trial)
 trialdurs = Stimtime + j1pr_use + jitter2 + jitter3;% trialdurs is in seconds
@@ -234,7 +229,7 @@ r2b=r2b-mean(r2b);
 
 % speech regressor: only on some of the trials.
 % after trial onset, the stimulus and jitter 1 happen before this one.
-t3b = trialonsets(dummy_trials) + Stimtime + jitter1(dummy_trials);
+t3b = trialonsets(dummy_trials) + Stimtime + jitter1(dummy_trials);% we have to select because t3b is only as long as the nr of dummy trials, not the nr of all trials
 onsets.overt = t3b(t3b <= endtime);% cut to size seperately because it needs to be saved
 r3 = zeros(1, endtime*4+1);
 
@@ -263,13 +258,17 @@ eff_save_stimuli=2./(c1*inv(Xb'*Xb)*c1'+c2*inv(Xb'*Xb)*c2');
 R0 = corrcoef(Xb);
 VIF = max(diag(inv(R0))');% max is a little misleading in relation to the cursor updating thing
 
+% Convert jitter1 to Presentation input format
+temp1 = num2cell(jitter1);
+temp1(~jitter1) = {'na'};
+jitter1 = temp1';
+
 % Convert jitter3 to Presentation input format
 temp3 = num2cell(jitter3);
 temp3(~jitter3) = {'na'};
 jitter3 = temp3';
 
 jitter2 = jitter2';
-jitter1 = jitter1';
 Speech = Speech';
 Object = Object';
 Colour = Colour';
