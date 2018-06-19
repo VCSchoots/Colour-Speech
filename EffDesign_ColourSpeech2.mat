@@ -52,7 +52,7 @@ addpath M:\General\Methodsy\Mumford_efficiency_tools
 
 % When reading this script, bear in mind that it generates multiple
 % representations of the same series of trials, which might sometimes be
-% confusing. Onsets and durations speak for themselves, Xb contains the
+% confusing. Onsets speaks for itself, Xb contains the
 % expected HRF timeseries in response to the stimuli, for use in the
 % efficiency calculation. presentationInput is yet another format, which
 % requires one entry per trial.
@@ -81,24 +81,12 @@ MaxJit3Range = 1;%1
 %a TR of 2 seconds.
 TR=2;
 
-% How many seconds to we have available? (Most practical to enter
-% [minutes*60]
-
-% GET RID OF ENDTIME!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-endtime = 30*60;% Note that this term dictates the length of greenbool.
-%                 If greenbool was longer than fits in endtime, it is cut
-%                 off, and fewer trials are included than were in
-%                 greenbool. If it was shorter, part of the design remains
-%                 empty. This messes up the design and so should be avoided.
-
-t=0:0.25:endtime;
 hrf_25=spm_hrf(0.25);
 rng('shuffle');% important to ensure truly random results from the random generator
 
 % ---------- END Of DEFINITIIONS ------------
 
 TrialNr(:) = 1:length(trialorder);% for presentation output
-
 
 %% Translating input to variables for the Presentation stimulus/timing list.
 
@@ -188,9 +176,11 @@ trialdurs = Stimtime + j1pr_use + jitter2 + jitter3;% trialdurs is in seconds
 %durations, so it does not run the risk of having missed
 %something.
 trialonsets = [0 cumsum(trialdurs(1:end-1))];% trialonsets is in seconds
+endTime = ceil(sum(trialdurs,2));
+t=0:0.25:endTime;% The time axis is used later for constructing the Xb regressors
 
 t4b = trialonsets(null_events) + Stimtime + j1pr_use(null_events) + jitter2(null_events);% j1pr_use(null_events) takes the jitter 1 plus resp (0 if not a dummy trial) only for this specific null trial.
-onsets.null = t4b(t4b <= endtime);
+onsets.null = t4b(t4b <= endTime);
 
 if length(greenbool) > length(trialonsets)
     % Here, the greenbool gets cut to size if it was too long.
@@ -200,38 +190,38 @@ else
 end% If it is too short, the last part of the design will be empty.
 
 t1b = trialonsets(tmpgreenbool);% only the onsets of green trials
-onsets.green = t1b(t1b <= endtime);% cut to size seperately because it needs to be saved
-r1 = zeros(1, endtime*4+1);% create an empty regressor at 4Hz sampling rate.
+onsets.green = t1b(t1b <= endTime);% cut to size seperately because it needs to be saved
+r1 = zeros(1, endTime*4+1);% create an empty regressor at 4Hz sampling rate.
 
-for i=1:length(t1b)% what happens to the trials that do not fit onto r1b any more? --> They disappear from view, because in the part "t1b(i)<=t & t<=(t1b(i)+Stimtime" any element of t1b that is higher than the endtime anyway is not considered.
+for i=1:length(t1b)% what happens to the trials that do not fit onto r1b any more? --> They disappear from view, because in the part "t1b(i)<=t & t<=(t1b(i)+Stimtime" any element of t1b that is higher than the endTime anyway is not considered.
     r1(t1b(i)<=t & t<=(t1b(i)+Stimtime))=1;  %add .5 for a 500ms duration, or whatever your stimulus time is.
 end
 
-r1_save = (r1(1:4*TR:4*endtime)/5)-.2;% Resampling at the TR, div by 5 and minus .2 for plotting.
+r1_save = (r1(1:4*TR:4*endTime)/5)-.2;% Resampling at the TR, div by 5 and minus .2 for plotting.
 
 r1b=conv(hrf_25, r1);
-r1b=r1b(1:4*TR:4*endtime);% Resampling at the TR.
+r1b=r1b(1:4*TR:4*endTime);% Resampling at the TR.
 r1b=r1b-mean(r1b);% mean centering is an alternative for including a regressor of ones into your design matrix.
 
 t2b = trialonsets(~tmpgreenbool);% any non-green is red. BUT: where greenbool is not present (indices later than greenbool) I guess this defaults to '1'?
-onsets.red = t2b(t2b <= endtime);% cut to size seperately because it needs to be saved
-r2 = zeros(1, endtime*4+1);
+onsets.red = t2b(t2b <= endTime);% cut to size seperately because it needs to be saved
+r2 = zeros(1, endTime*4+1);
 
 for i=1:length(t2b)
     r2(t2b(i)<=t & t<=(t2b(i) + Stimtime))=1;  %add Stimtime for its duration
 end
 
-r2_save = (r2(1:4*TR:4*endtime)/5)-.2;
+r2_save = (r2(1:4*TR:4*endTime)/5)-.2;
 
 r2b=conv(hrf_25, r2);
-r2b=r2b(1:4*TR:4*endtime);
+r2b=r2b(1:4*TR:4*endTime);
 r2b=r2b-mean(r2b);
 
 % speech regressor: only on some of the trials.
 % after trial onset, the stimulus and jitter 1 happen before this one.
 t3b = trialonsets(dummy_trials) + Stimtime + jitter1(dummy_trials);% we have to select because t3b is only as long as the nr of dummy trials, not the nr of all trials
-onsets.overt = t3b(t3b <= endtime);% cut to size seperately because it needs to be saved
-r3 = zeros(1, endtime*4+1);
+onsets.overt = t3b(t3b <= endTime);% cut to size seperately because it needs to be saved
+r3 = zeros(1, endTime*4+1);
 
 for i=1:length(t3b)%  Even though t3b is probably longer than the nr of trials needed,
     % r3b ends up the right length because t does
@@ -240,10 +230,10 @@ for i=1:length(t3b)%  Even though t3b is probably longer than the nr of trials n
     r3(t3b(i)<=t & t<=(t3b(i) + Resptime))=1;  %add Resptime for its duration
 end
 
-r3_save = (r3(1:4*TR:4*endtime)/5)-.2;
+r3_save = (r3(1:4*TR:4*endTime)/5)-.2;
 
 r3b=conv(hrf_25, r3);
-r3b=r3b(1:4*TR:4*endtime);
+r3b=r3b(1:4*TR:4*endTime);
 r3b=r3b-mean(r3b);
 
 Xb=[r1b', r2b', r3b'];
