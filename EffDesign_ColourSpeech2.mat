@@ -35,6 +35,8 @@ function [onsets,Xb,eff_save_stimuli,VIF,presentationInput] = EffDesign_ColourSp
 %   stimuli and speech cues.
 %   Eff_save_stimuli is the efficiency, VIF is the VIF of the design.
 %   PresentationInput is a cell array of tables with info for Presentation.
+%   In the presentation input, practice trials are added before the
+%   actual start of the experiment.
 
 addpath M:\General\Methodsy\Mumford_efficiency_tools
 %edit the above path to point towards the directory with spm_hrf in it.
@@ -56,11 +58,6 @@ addpath M:\General\Methodsy\Mumford_efficiency_tools
 % expected HRF timeseries in response to the stimuli, for use in the
 % efficiency calculation. presentationInput is yet another format, which
 % requires one entry per trial.
-
-% Set the number of simulations
-if ~exist('nsim','var')
-    nsim=1;% don't change for this version of the script
-end
 
 Stimtime = .5;% Time (s) the stimulus picture is on screen
 Resptime = 2;% Time (s) the response window lasts
@@ -134,15 +131,6 @@ end
 
 %% -------------from here on, we look to optimise the jitter--------
 
-eff_save_1=zeros(nsim, 1);
-eff_save_2=zeros(nsim,1);
-
-if MaxJit3Range == 0% saving computation time in case the duration of null events is not jittered
-    nsim3 = 1;
-else
-    nsim3 = nsim;
-end
-
 % The ones with the addition "_raw" will not appear on every trial, and so
 % in a later step, we select from the generated series only at the index
 % where a null trial or a speech trial happens.
@@ -176,7 +164,13 @@ trialdurs = Stimtime + j1pr_use + jitter2 + jitter3;% trialdurs is in seconds
 %durations, so it does not run the risk of having missed
 %something.
 trialonsets = [0 cumsum(trialdurs(1:end-1))];% trialonsets is in seconds
-endTime = ceil(sum(trialdurs,2));
+%endTime = ceil(sum(trialdurs,2));
+endTime = 1600;% this will cut short all designs, some by minutes, but it is the best
+% compromise for calculating the efficiency of the designs because 
+% they need to be the same length, and designs with trailing empty space
+% are favored by the Efficiency calculation so we can't set this to be too long in stead of too short.
+% The trials will not be cut from the actual experiment, only from the
+% efficiency calculation.
 t=0:0.25:endTime;% The time axis is used later for constructing the Xb regressors
 
 t4b = trialonsets(null_events) + Stimtime + j1pr_use(null_events) + jitter2(null_events);% j1pr_use(null_events) takes the jitter 1 plus resp (0 if not a dummy trial) only for this specific null trial.
@@ -197,8 +191,6 @@ for i=1:length(t1b)% what happens to the trials that do not fit onto r1b any mor
     r1(t1b(i)<=t & t<=(t1b(i)+Stimtime))=1;  %add .5 for a 500ms duration, or whatever your stimulus time is.
 end
 
-r1_save = (r1(1:4*TR:4*endTime)/5)-.2;% Resampling at the TR, div by 5 and minus .2 for plotting.
-
 r1b=conv(hrf_25, r1);
 r1b=r1b(1:4*TR:4*endTime);% Resampling at the TR.
 r1b=r1b-mean(r1b);% mean centering is an alternative for including a regressor of ones into your design matrix.
@@ -210,8 +202,6 @@ r2 = zeros(1, endTime*4+1);
 for i=1:length(t2b)
     r2(t2b(i)<=t & t<=(t2b(i) + Stimtime))=1;  %add Stimtime for its duration
 end
-
-r2_save = (r2(1:4*TR:4*endTime)/5)-.2;
 
 r2b=conv(hrf_25, r2);
 r2b=r2b(1:4*TR:4*endTime);
@@ -230,8 +220,6 @@ for i=1:length(t3b)%  Even though t3b is probably longer than the nr of trials n
     r3(t3b(i)<=t & t<=(t3b(i) + Resptime))=1;  %add Resptime for its duration
 end
 
-r3_save = (r3(1:4*TR:4*endTime)/5)-.2;
-
 r3b=conv(hrf_25, r3);
 r3b=r3b(1:4*TR:4*endTime);
 r3b=r3b-mean(r3b);
@@ -240,8 +228,8 @@ Xb=[r1b', r2b', r3b'];
 c1=[1 0 0];
 c2=[0 1 0];
 
-eff_save_1=1./(c1*inv(Xb'*Xb)*c1');% here is the formula for calculating efficiency.
-eff_save_2=1./(c2*inv(Xb'*Xb)*c2');
+%eff_save_1=1./(c1*inv(Xb'*Xb)*c1');% here is the formula for calculating efficiency.
+%eff_save_2=1./(c2*inv(Xb'*Xb)*c2');
 eff_save_stimuli=2./(c1*inv(Xb'*Xb)*c1'+c2*inv(Xb'*Xb)*c2');
 
 % also get the Variance Inflation Factor
@@ -251,22 +239,58 @@ VIF = max(diag(inv(R0))');% max is a little misleading in relation to the cursor
 % Convert jitter1 to Presentation input format
 temp1 = num2cell(jitter1);
 temp1(~jitter1) = {'na'};
-jitter1 = temp1';
 
 % Convert jitter3 to Presentation input format
 temp3 = num2cell(jitter3);
 temp3(~jitter3) = {'na'};
-jitter3 = temp3';
 
+TrialCount = insertnulls(TrialNr, null_events, 'na');
+Colour = insertnulls(Colour, null_events, 'n');
+Object = insertnulls(Object, null_events, 'na');
+Speech = insertnulls(Speech, null_events, 'no');
+jitter1 = insertnulls(temp1, null_events, 'na');
+jitter2 = insertnulls(jitter2, null_events, 'na');
+jitter3 = insertnulls(temp3, null_events-1, 'na');% the 'na' needs to be inserted on the index in stead of index+1 for the jitter3's
+
+TrialNr = 1:length(Colour);
+
+TrialCount = TrialCount';
+jitter1 = jitter1';
 jitter2 = jitter2';
+jitter3 = jitter3';
 Speech = Speech';
 Object = Object';
 Colour = Colour';
 TrialNr = TrialNr';
 
-presentationInput = table(TrialNr,Colour,Object,Speech,jitter1,jitter2,jitter3);
+presentationInput = table(TrialNr,Colour,Object,Speech,jitter1,jitter2,jitter3,TrialCount);
 
 end% of function EffDesign_Colourspeech3
+
+function outVec = insertnulls(inVec, null_trials, inVec2)% inserts null trial entries in the presentationInput list
+
+numNull = numel(null_trials);
+outVec = ones(size(inVec) + [0 numNull]);
+i2 = null_trials + (1:numNull);
+outVec(i2) = 0;
+i3 = outVec > 0;
+
+if iscell(inVec)
+    outVec = num2cell(outVec);
+end
+
+outVec(i3) = inVec;
+
+if ischar(inVec2)
+    if ~iscell(outVec)
+        outVec = num2cell(outVec);
+    end
+    inVec2 = {inVec2};
+end
+
+outVec(i2) = inVec2;
+
+end% of function insertnulls
 
 %%=========================================================================
 %
