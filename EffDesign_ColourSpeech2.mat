@@ -1,317 +1,83 @@
-function [onsets,Xb,eff_save_stimuli,VIF,presentationInput] = EffDesign_ColourSpeech2(dummy_trials,null_events,trialorder)
+% Batch_Efftest
+% Is a wrapper around the scripts Semirand_dummytrials,
+% Semirand_nulltrials, carryoverCounterbalance, and
+% Effdesign_Colourspeech2, so that you can run it like 10000 times and
+% collect the efficiencies and designs, to test and save them.
 
-%EFFDESIGN_COLOURSPEECH2 Passes on the jitter times and the individual
-%trial info.
-%
-%   EFFDESIGN_COLOURSPEECH3(DUMMY_TRIALS) Returns a plot of the most widely
-%   spaced and most narrowly spaced design tested, along with a surface or
-%   volume plot of the detection efficiency for the green and the red trials and null events as a
-%   function of jitter parameter (e.g. short to long mean jitter).
-%
-%   It requires the input argument dummy_trials, a boolean vector saying
-%   which trials to treat as
-%   trials of non-interest (coded as 1s), in which overt speech is
-%   produced. It is intended to simply be much longer than the nr of trials
-%   in the design. If you supply all 1s, you get a design where overt
-%   speech is required on every trial.
-%
-%   In the absence of additional input arguments, the script makes
-%   an alternating sequence of green and red trials, starting with green.
-%
-%   EFFDESIGN_COLOURSPEECH2(DUMMY_TRIALS,NULL_EVENTS) Accepts a
-%   boolean vector null_events dictating after which trials to insert a
-%   null event. It can be longer than the actual design, the entries that
-%   come later than the last trial in the design are discarded.
-%
-%   EFFDESIGN_COLOURSPEECH2(DUMMY_TRIALS,NULL_EVENTS,GREENBOOL) Accepts a user-sepcified
-%   boolean that dictates the order of the green and red stimuli. If you do
-%   not want null events but do want to provide greenbool, please provide a
-%   long vector of boolean zeros for null_events (also see MatLab help on
-%   function boolean() ).
-%
-%   [ONSETS,DESIGN,EFF_SAVE_STIMULI,VIF, PRESENTATIONINPUT] = EFFDESIGN_COLOURSPEECH(...) Outputs a structure
-%   called 'onsets' with all the green, red and overt speech onsets for all
-%   tested designs. Xb contains the design matrix for green stimuli, red
-%   stimuli and speech cues.
-%   Eff_save_stimuli is the efficiency, VIF is the VIF of the design.
-%   PresentationInput is a cell array of tables with info for Presentation.
-%   In the presentation input, practice trials are added before the
-%   actual start of the experiment.
+%% Definitions part
+clear
+tic
+nsim = 400;
 
-addpath M:\General\Methodsy\Mumford_efficiency_tools
-%edit the above path to point towards the directory with spm_hrf in it.
+%% Preparation
+if ispc
+    root = 'P:';
+elseif isunix
+    root = '/home/project';
+end
 
-%% -------DEFINITIONS---------
-% There are 3*2 conditions in my design:
-% [Semantic Judgment, Object Naming, Colour Naming] * [Red, Green].
-% these will be presented in blocks, the colours event-related.
-% The objective of the script is to estimate the efficiency of different
-% sequences and jitters, and hopefully to find the best one. This is done
-% for one condition (e.g. Semantic Judgment) because the next run will need
-% to have a separate sequence.
-% There is always a 500 ms Stimulus, then "Jitter 1", then 2000 ms response
-% window, then "Jitter 2". "Jitter 3" is for null events.
+onsets = cell(1,nsim);
+designs = cell(1,nsim);
+%eff = nan(1,nsim);%predefining causes unwanted interactions if you need to
+% sort() at every loop.
+%VIF = nan(1,nsim);
+nr_topdesigns = nan(1,nsim);
+presInput = cell(1,nsim);
 
-% When reading this script, bear in mind that it generates multiple
-% representations of the same series of trials, which might sometimes be
-% confusing. Onsets speaks for itself, Xb contains the
-% expected HRF timeseries in response to the stimuli, for use in the
-% efficiency calculation. presentationInput is yet another format, which
-% requires one entry per trial.
+R0 = NaN;% define to be able to use after loop
+first_percentile = NaN;
 
-Stimtime = .5;% Time (s) the stimulus picture is on screen
-Resptime = 2;% Time (s) the response window lasts
+w = warning ('off','all');
 
-% The parameters set there might or might not be overwritten, depending on
-% the mode you set. The min. jitter is determined by the
-% values you enter here, and the max is set by MaxJitXRange (below).
-
-minj1t = 1.5;% 1.5 minimum jitter 1 (goes in between stimulus and speech cue)
-minj2t = 1.5;% 1.5 min jitter 2 (goes between trials)
-minj3t = 11.5;% 11.5 min jitter 3 (is the null events)
-
-MaxJit1Range = 1;%1 What is the max. range you want tested? (in s, max = min + MaxJitRange).
-MaxJit2Range = 1;%1
-MaxJit3Range = 1;%1
-
-%create each trial in high resolution, convolve and then I'll downsample to
-%a TR of 2 seconds.
-TR=2;
-
-hrf_25=spm_hrf(0.25);
-rng('shuffle');% important to ensure truly random results from the random generator
-
-% ---------- END Of DEFINITIIONS ------------
-
-TrialNr(:) = 1:length(trialorder);% for presentation output
-
-%% Translating input to variables for the Presentation stimulus/timing list.
-
-greenbool = boolean(trialorder<6);% Keeping the trialorder for output, making greenbool for efficiency calculation. 1-5 = green.
-sizgrb = size(greenbool);
-
-Colour = cell(sizgrb);
-Colour(greenbool) = {'g'};
-Colour(~greenbool) = {'r'};
-
-stimlist = {'cactus','frog','crocodile','tank','turtle','tomato','strawberry','cherry','lobster','fire_truck'};
-Object = stimlist(trialorder);
-
-%% Determining the order of the stimuli
-
-if ~exist('greenbool','var')
-    warning('''greenbool'' input was not provided; generating an alternating sequence of green/red trials.')
-    greenbool = zeros(1,sizgrb); greenbool(1:2:end) = 1;%alternate [1 0 1 ...]
+%% Main
+for i=1:nsim% run the Effdesign function
+    h = waitbar(i/nsim);
+    [onsets{i},designs{i},eff(i),VIF(i),presInput{i}] = EffDesign_ColourSpeech2(Semirand_dummytrials,Semirand_nulltrials,carryoverCounterbalance(10,1,4,0));
     
-    % If you want to try randomly permuting:
-    %     rng('shuffle');% to get a different sequence every time
-    %     greenbool = greenbool(randperm(length(greenbool)));
+    % sort from low to high efficiency
+    [eff,I] = sort(eff);
+    onsets = onsets(I);
+    designs = designs(I);
+    VIF = VIF(I);
+    presInput = presInput(I);
     
-    greenbool = boolean(greenbool);
-elseif exist('greenbool','var')
-    if length(greenbool) == sizgrb
-    elseif length(greenbool) < sizgrb
-        warning('Length of greenbool is %d, length of max nr of trials is %d. Part of the design might remain empty.',length(greenbool),sizgrb)
-    else%if length(greenbool) > sizgrb
-        warning('Length of greenbool is %d, length of max nr of trials is %d. Trials after the max. time will not end up in the design.',length(greenbool),sizgrb)
-    end
+    l = length(designs);
+    first_percentile = ceil(l*.99);
+    topdesigns = designs(first_percentile:end);%select top 1%
+    nr_topdesigns(i) = length(topdesigns);
+    
+    % test multicollinearity over top models
+    XbCat = cell2mat(topdesigns);
+    R0 = corrcoef(XbCat);
+    VIFz(i) = max(diag(inv(R0))');
+end
+close(h)
+
+warning(w)
+
+figure;
+plot(eff,'.');
+label('All designs');
+ylabel('Efficiency');
+
+figure;plot(nr_topdesigns,VIFz,'.');
+%title('VIF')
+xlabel('Nr of topdesigns')
+ylabel('VIF')
+
+% check if any design contains regressors with VIF over 2 and delete them
+VIF_end = diag(inv(R0))';
+VIF_high = VIF_end >= 2;
+badXb = ceil(find(VIF_high)/3);% index of the bad designs
+
+topPresIn = presInput(first_percentile:end);
+topPresIn(badXb) = [];% bad designs set to []
+
+% Write to disk
+for i=1:length(topPresIn)
+    filNm = sprintf('L%03.0f.txt',i);
+    pthNm = fullfile(root,'3021005.23','Presentation','StimOrderFiles',filNm);
+    writetable(topPresIn{1,end-(i-1)},pthNm,'Delimiter',';');%best design to least good design (end-(i-1))
 end
 
-dummy_trials = dummy_trials(dummy_trials <= sizgrb(2));%culling to size
-
-Speech = cell(sizgrb);
-Speech(:) = {'no'};
-Speech(dummy_trials) = {'yes'};
-
-if exist('null_events','var')
-    null_events = null_events(null_events <= sizgrb(2));
-else
-    null_events = boolean(zeros(sizgrb));% Assume the user wants no null events.
-end
-
-%% -------------from here on, we look to optimise the jitter--------
-
-% The ones with the addition "_raw" will not appear on every trial, and so
-% in a later step, we select from the generated series only at the index
-% where a null trial or a speech trial happens.
-jitter3_raw = rand(sizgrb) * MaxJit3Range + minj3t;
-jitter2 = rand(sizgrb) * MaxJit2Range + minj2t;
-jitter1_raw = rand(sizgrb) * MaxJit1Range + minj1t;
-
-%% make the time series of trial durations (jitter 1 and response should
-%only come into play on an overt speech trial)
-
-% Dummy trials need to be inserted in between the normal
-% trials. That means, 'glued to the end of a trial' after jitter 2s. We first set all
-% jitter3s to 0s in the places where no null trial is, then add
-% the whole list of null trials (most of which now have
-% duration 0) to the design.
-jitter3 = zeros(size(jitter3_raw));
-jitter3(null_events) = jitter3_raw(null_events);
-
-% add resp. time to jitter1 and use only on NON-overt speech
-% trials (i.e. normal trials), setting the rest to 0.
-jitter1 = zeros(size(jitter1_raw));
-jitter1(dummy_trials) = jitter1_raw(dummy_trials);
-
-j1pr_use = zeros(size(jitter1_raw));
-j1pr_use(dummy_trials) = jitter1(dummy_trials) + Resptime;
-
-% trialdurs (below) takes into account all the eventualities (dummy trials and null trials both might or might not be at a given trial)
-trialdurs = Stimtime + j1pr_use + jitter2 + jitter3;% trialdurs is in seconds
-%make the time series of trial onsets, might be longer than
-%greenbool. trialonsets is being constructed from trial
-%durations, so it does not run the risk of having missed
-%something.
-trialonsets = [0 cumsum(trialdurs(1:end-1))];% trialonsets is in seconds
-%endTime = ceil(sum(trialdurs,2));
-endTime = 1600;% this will cut short all designs, some by minutes, but it is the best
-% compromise for calculating the efficiency of the designs because 
-% they need to be the same length, and designs with trailing empty space
-% are favored by the Efficiency calculation so we can't set this to be too long in stead of too short.
-% The trials will not be cut from the actual experiment, only from the
-% efficiency calculation.
-t=0:0.25:endTime;% The time axis is used later for constructing the Xb regressors
-
-t4b = trialonsets(null_events) + Stimtime + j1pr_use(null_events) + jitter2(null_events);% j1pr_use(null_events) takes the jitter 1 plus resp (0 if not a dummy trial) only for this specific null trial.
-onsets.null = t4b(t4b <= endTime);
-
-if length(greenbool) > length(trialonsets)
-    % Here, the greenbool gets cut to size if it was too long.
-    tmpgreenbool = greenbool(1:length(trialonsets));
-else
-    tmpgreenbool = greenbool;
-end% If it is too short, the last part of the design will be empty.
-
-t1b = trialonsets(tmpgreenbool);% only the onsets of green trials
-onsets.green = t1b(t1b <= endTime);% cut to size seperately because it needs to be saved
-r1 = zeros(1, endTime*4+1);% create an empty regressor at 4Hz sampling rate.
-
-for i=1:length(t1b)% what happens to the trials that do not fit onto r1b any more? --> They disappear from view, because in the part "t1b(i)<=t & t<=(t1b(i)+Stimtime" any element of t1b that is higher than the endTime anyway is not considered.
-    r1(t1b(i)<=t & t<=(t1b(i)+Stimtime))=1;  %add .5 for a 500ms duration, or whatever your stimulus time is.
-end
-
-r1b=conv(hrf_25, r1);
-r1b=r1b(1:4*TR:4*endTime);% Resampling at the TR.
-r1b=r1b-mean(r1b);% mean centering is an alternative for including a regressor of ones into your design matrix.
-
-t2b = trialonsets(~tmpgreenbool);% any non-green is red. BUT: where greenbool is not present (indices later than greenbool) I guess this defaults to '1'?
-onsets.red = t2b(t2b <= endTime);% cut to size seperately because it needs to be saved
-r2 = zeros(1, endTime*4+1);
-
-for i=1:length(t2b)
-    r2(t2b(i)<=t & t<=(t2b(i) + Stimtime))=1;  %add Stimtime for its duration
-end
-
-r2b=conv(hrf_25, r2);
-r2b=r2b(1:4*TR:4*endTime);
-r2b=r2b-mean(r2b);
-
-% speech regressor: only on some of the trials.
-% after trial onset, the stimulus and jitter 1 happen before this one.
-t3b = trialonsets(dummy_trials) + Stimtime + jitter1(dummy_trials);% we have to select because t3b is only as long as the nr of dummy trials, not the nr of all trials
-onsets.overt = t3b(t3b <= endTime);% cut to size seperately because it needs to be saved
-r3 = zeros(1, endTime*4+1);
-
-for i=1:length(t3b)%  Even though t3b is probably longer than the nr of trials needed,
-    % r3b ends up the right length because t does
-    % not run beyond the end time of the
-    % experiment.
-    r3(t3b(i)<=t & t<=(t3b(i) + Resptime))=1;  %add Resptime for its duration
-end
-
-r3b=conv(hrf_25, r3);
-r3b=r3b(1:4*TR:4*endTime);
-r3b=r3b-mean(r3b);
-
-Xb=[r1b', r2b', r3b'];
-c1=[1 0 0];
-c2=[0 1 0];
-
-%eff_save_1=1./(c1*inv(Xb'*Xb)*c1');% here is the formula for calculating efficiency.
-%eff_save_2=1./(c2*inv(Xb'*Xb)*c2');
-eff_save_stimuli=2./(c1*inv(Xb'*Xb)*c1'+c2*inv(Xb'*Xb)*c2');
-
-% also get the Variance Inflation Factor
-R0 = corrcoef(Xb);
-VIF = max(diag(inv(R0))');% max is a little misleading in relation to the cursor updating thing
-
-% Convert jitter1 to Presentation input format
-temp1 = num2cell(jitter1);
-temp1(~jitter1) = {'na'};
-
-% Convert jitter3 to Presentation input format
-temp3 = num2cell(jitter3);
-temp3(~jitter3) = {'na'};
-
-TrialCount = insertnulls(TrialNr, null_events, 'na');
-Colour = insertnulls(Colour, null_events, 'n');
-Object = insertnulls(Object, null_events, 'na');
-Speech = insertnulls(Speech, null_events, 'no');
-jitter1 = insertnulls(temp1, null_events, 'na');
-jitter2 = insertnulls(jitter2, null_events, 'na');
-jitter3 = insertnulls(temp3, null_events-1, 'na');% the 'na' needs to be inserted on the index in stead of index+1 for the jitter3's
-
-TrialNr = 1:length(Colour);
-
-TrialCount = TrialCount';
-jitter1 = jitter1';
-jitter2 = jitter2';
-jitter3 = jitter3';
-Speech = Speech';
-Object = Object';
-Colour = Colour';
-TrialNr = TrialNr';
-
-presentationInput = table(TrialNr,Colour,Object,Speech,jitter1,jitter2,jitter3,TrialCount);
-
-end% of function EffDesign_Colourspeech3
-
-function outVec = insertnulls(inVec, null_trials, inVec2)% inserts null trial entries in the presentationInput list
-
-numNull = numel(null_trials);
-outVec = ones(size(inVec) + [0 numNull]);
-i2 = null_trials + (1:numNull);
-outVec(i2) = 0;
-i3 = outVec > 0;
-
-if iscell(inVec)
-    outVec = num2cell(outVec);
-end
-
-outVec(i3) = inVec;
-
-if ischar(inVec2)
-    if ~iscell(outVec)
-        outVec = num2cell(outVec);
-    end
-    inVec2 = {inVec2};
-end
-
-outVec(i2) = inVec2;
-
-end% of function insertnulls
-
-%%=========================================================================
-%
-% Copyright 2018 Vincent Schoots
-%
-%    This is a MATLABï¿½ script MEANT TO HELP OPTIMISE THE EFFICIENCY OF AN
-%    fMRI DESIGN. MatLab is proprietary software owned by MathWorksï¿½.
-%    This script is built off of a tutorial on efficiency calculation by
-%    Dr. Jeanette Mumford, available here
-%    https://www.dropbox.com/sh/zp4foawa4c5w5rr/AAAfQ0mv-CHKj1c63ihC-ZBca?dl=0
-%    With the accompanying tutorial video
-%    https://www.youtube.com/watch?v=xr20ajRNkAI
-%
-%    Licensed under the Apache License, Version 2.0 (the "License");
-%    you may not use this file except in compliance with the License.
-%    You may obtain a copy of the License at
-%
-%        http://www.apache.org/licenses/LICENSE-2.0
-%
-%    Unless required by applicable law or agreed to in writing, software
-%    distributed under the License is distributed on an "AS IS" BASIS,
-%    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-%    See the License for the specific language governing permissions and
-%    limitations under the License.
+toc
