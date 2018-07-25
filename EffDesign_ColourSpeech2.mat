@@ -7,7 +7,7 @@
 %% Definitions part
 clear
 tic
-nsim = 400;
+nsim = 16000;
 
 %% Preparation
 if ispc
@@ -33,45 +33,43 @@ w = warning ('off','all');
 for i=1:nsim% run the Effdesign function
     h = waitbar(i/nsim);
     [onsets{i},designs{i},eff(i),VIF(i),presInput{i}] = EffDesign_ColourSpeech2(Semirand_dummytrials,Semirand_nulltrials,carryoverCounterbalance(10,1,4,0));
-    
-    % sort from low to high efficiency
-    [eff,I] = sort(eff);
-    onsets = onsets(I);
-    designs = designs(I);
-    VIF = VIF(I);
-    presInput = presInput(I);
-    
-    l = length(designs);
-    first_percentile = ceil(l*.99);
-    topdesigns = designs(first_percentile:end);%select top 1%
-    nr_topdesigns(i) = length(topdesigns);
-    
-    % test multicollinearity over top models
-    XbCat = cell2mat(topdesigns);
-    R0 = corrcoef(XbCat);
-    VIFz(i) = max(diag(inv(R0))');
 end
 close(h)
-
 warning(w)
+
+% sort from low to high efficiency
+[eff,I] = sort(eff);
+onsets = onsets(I);
+designs = designs(I);
+VIF = VIF(I);
+presInput = presInput(I);
+
+l = length(designs);
+first_percentile = ceil(l*.99);
+topdesigns = designs(first_percentile:end);%select top 1%
+nr_topdesigns = length(topdesigns);
+
+% test multicollinearity over top models
+XbCat = cell2mat(topdesigns);
+R0 = corrcoef(XbCat);
+VIFz = diag(inv(R0))';
 
 figure;
 plot(eff,'.');
-label('All designs');
+xlabel('All designs');
 ylabel('Efficiency');
 
-figure;plot(nr_topdesigns,VIFz,'.');
+figure;plot(1:nr_topdesigns*3,VIFz,'.');
 %title('VIF')
-xlabel('Nr of topdesigns')
+xlabel('Topdesigns')
 ylabel('VIF')
 
 % check if any design contains regressors with VIF over 2 and delete them
-VIF_end = diag(inv(R0))';
-VIF_high = VIF_end >= 2;
-badXb = ceil(find(VIF_high)/3);% index of the bad designs
+%VIF_high = VIFz >= 2;
+%badXb = ceil(find(VIF_high)/3);% index of the bad designs
 
 topPresIn = presInput(first_percentile:end);
-topPresIn(badXb) = [];% bad designs set to []
+%topPresIn(badXb) = [];% bad designs set to []
 
 % Write to disk
 for i=1:length(topPresIn)
