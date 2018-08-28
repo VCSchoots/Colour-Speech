@@ -279,35 +279,6 @@ end;
 
 ############################ LOGFILE #######################   
 
-#----------------------------------------------------------------------------------------------------------
-sub writeFirstPulse begin 
-#  Writing the first pulse time to the log file
-	int mri_pulse_wait = 2; # number of MRI pulses to wait
-	
-	int pulses = pulse_manager.main_pulse_count();
-	
-	loop
-		int i=1
-	until
-		i > mri_pulse_wait
-	begin
-		if (pulse_manager.main_pulse_count() > pulses) then
-			pulses = pulse_manager.main_pulse_count();   
-			int time = pulse_manager.main_pulse_time( pulses );
-			
-/*			text_1.set_caption(string(mri_pulse_wait - i));
-			text_1.set_font_size(48);
-			text_1.redraw();
-			trial_text.set_duration(500);
-			trial_text.present();
-*/			
-			i=i+1;
-		end;
-	end;
-	
-	ofile1.print("StartTime (after " + 
-	string(mri_pulse_wait) + ". scanner pulse) = \t" + string(clock.time()) + "\n");        	# log start time after MRI pulse
-end;
 
 #----------------------------------------------------------------------------------------------------------
 sub WriteHeader ( string sFilename) 
@@ -323,7 +294,7 @@ begin
 	sOutputLine.append("TrialNrInputFile");   
 	sOutputLine.append("\t");	
 	sOutputLine.append("TrialCount");   
-	sOutputLine.append("\n");	
+	sOutputLine.append("\t");	
 	sOutputLine.append("Color");   
 	sOutputLine.append("\t");
 	sOutputLine.append("Object");   
@@ -342,7 +313,6 @@ begin
 	sOutputLine.append("\n");
 
    ofile1.open_append( sFilename );      # don't overwrite file, if it already exists, but open to append!
-   writeFirstPulse();						  # noting the time of the pulse that precedes the experiment
    ofile1.print( sOutputLine );          # create header of output file
    ofile1.close();
 
@@ -388,8 +358,43 @@ begin
 
 end;
 
-############################ TRIAL #######################   
+############################ Scanner countdown #######################   
 
+# present a countdown screen and print the time of the 31st scan trigger to Log file
+
+sub countdown( string sFilename ) begin
+	
+	int mri_pulse_wait = 30; # number of MRI pulses to wait
+	int pulses = pulse_manager.main_pulse_count();
+	
+	loop
+		int pulsecount = 1;
+	until pulsecount > mri_pulse_wait begin
+		if (pulse_manager.main_pulse_count() > pulses) then# as soon as another pulse is sent
+			pulses = pulse_manager.main_pulse_count();   
+			t_countdown.set_caption("Wachten op de scanner...\n" + string( 31 - pulsecount) );
+			t_countdown.redraw();
+			p_countdown.present();
+			pulsecount = pulsecount + 1;
+		end;
+	end;
+	
+	int time = pulse_manager.main_pulse_time( pulses );
+	
+   string sOutputLine = "";
+
+	sOutputLine.append(sListNR + "\t");     #write participant nr followed by a tab
+	sOutputLine.append("FirstVolume\t");     #write first volume followed by 10 tabs
+	sOutputLine.append("\t\t\t\t\t\t\t\t\t\t");
+	sOutputLine.append(string( time ) + "\n");#write the clock time directly after the 31st pulse
+	
+   ofile1.open_append( sFilename );      # don't overwrite file, if it already exists, but open to append!
+	ofile1.print(sOutputLine);        	# log start time after MRI pulse
+   ofile1.close();
+end;
+
+
+############################ TRIAL #######################   
 
 #-----------------run trial------------------------------------
 
