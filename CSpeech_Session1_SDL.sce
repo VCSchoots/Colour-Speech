@@ -35,9 +35,9 @@ begin;
 ##########################
 picture {} default;	# blank screen
 
-picture { box { height = 2; width = 60; color = 0, 0, 0; } horz_s;
+picture { box { height = 2; width = 30; color = 0, 0, 0; } horz_s;
 			 x = 0; y = 0;
-			 box { height = 60; width = 2; color = 0, 0, 0; } vert_s;
+			 box { height = 30; width = 2; color = 0, 0, 0; } vert_s;
 			 x = 0; y = 0;
 } fixation;  # fixation cross
 
@@ -49,6 +49,10 @@ picture { text { caption = " "; } t_info1; x = 0; y = 20;
           text { caption = " "; } t_info2; x = 0; y = -40;
           text { caption = "Press [ENTER] to confirm or [Esc] to abort. "; } t_info3; x = 0; y = -150;
 } p_info; # text
+
+picture { text { caption = "Wachten op de scanner...
+"; } t_countdown; x = 0; y = 0;
+} p_countdown; # countdown picture for when the scanner is collecting 30 volume-weighting volumes before the exp. starts.
 
 ######## GENERAL PICTURES ########
 
@@ -78,7 +82,7 @@ picture { text { caption =
 aan de taak in de scanner. Het is tijdens het hele ex-
 periment BELANGRIJK DAT JE JE BLIK IN HET MIDDEN HOUDT,
 op het kruis of de stip, ook als het plaatje komt. De
-plaatjes in de oefenronde zijn andere dan in het experiment"; } t_traininginstr_1; x = 0; y = 0;  
+plaatjes in de oefenronde zijn andere dan in het experiment."; } t_traininginstr_1; x = 0; y = 0;  
 } p_instr_training;
 
 picture { text { caption =
@@ -128,9 +132,9 @@ sound_recording {
 ####### visual stimuli ########
 
 picture { bitmap { filename = "Pictures\\empty.bmp"; preload = true; width = 300; height = 300; transparent_color = 255,255,255;} b_target; x = 0; y = 0;
-          box { height = 2; width = 60; color = 0, 0, 0; } horz_s_pic;
+          box { height = 2; width = 30; color = 0, 0, 0; } horz_s_pic;
 			 x = 0; y = 0;
-			 box { height = 60; width = 2; color = 0, 0, 0; } vert_s_pic;
+			 box { height = 30; width = 2; color = 0, 0, 0; } vert_s_pic;
 			 x = 0; y = 0; 
 } p_target; 
 
