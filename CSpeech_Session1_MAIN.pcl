@@ -1,0 +1,73 @@
+########### SESSION 1 ###########
+
+########### initiation ###########
+
+include "CSpeech_Session1_INFO.pcl";		# Include all the variables.
+include "CSpeech_Session1_SUBS.pcl";		# Include all the subroutines.
+# Loop until the clock is no longer negative.
+loop until clock.time() >= 0 begin end; 	
+
+########### welcome ###########
+
+# present a blank screen 
+default.present(); 
+
+# Present welcome screen, continue with enter
+p_welcome.present();		 
+WaitForButtonpress( button_enter );
+
+########### object naming part ###########
+task = "objectnaming"; 
+default.present(); # present a blank screen 
+
+# Present instruction screen for object naming, continue with enter
+p_instr_naming.present();		 
+WaitForButtonpress( button_enter );
+
+training();
+default.present(); # present a blank screen 
+
+# Enter input file for the session, e.g. "sub_01"
+OpenInputFile("What's the subject code (e.g., sub_01)?"); 
+     
+# Prepare logfile
+WriteHeader( outputfilename );	                         
+default.present(); # present a blank screen
+
+# Wait for the scanner to collect 30 weighting volumes, present counter to participant and log first pulse time to logfile.
+countdown( outputfilename );
+
+# Run trials, save to log file (see subroutine)
+runExp();
+
+p_end_part1.present();
+WaitForButtonpress( button_enter );
+
+########### semantic judgement part ###########
+task = "judgement"; 
+
+# Present instruction screen for semantic judgement, continue with enter
+p_instr_judgement.present();		 
+WaitForButtonpress( button_enter );
+
+training();
+default.present(); # present a blank screen 
+
+# Enter input file for the session, e.g. "sub_01"
+OpenInputFile("What's the subject code (e.g., sub_01)?"); 
+     
+# Prepare logfile
+WriteHeader( outputfilename );	                         
+default.present(); # present a blank screen 
+
+# Present instruction screen for semantic judgement, delete if unwanted
+#p_instr_judgement.present();		 
+#WaitForButtonpress( button_enter );
+
+# Run trials, save to log file (see subroutine)
+runExp();
+
+########### the end ###########
+     
+EndFinalScreen();
+
