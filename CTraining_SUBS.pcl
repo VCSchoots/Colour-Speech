@@ -159,6 +159,36 @@ end;
 ############################ LOGFILE #######################   
 
 #----------------------------------------------------------------------------------------------------------
+sub writeFirstPulse begin 
+#  Writing the first pulse time to the log file
+	int mri_pulse_wait = 2; # number of MRI pulses to wait
+	
+	int pulses = pulse_manager.main_pulse_count();
+	
+	loop
+		int i=1
+	until
+		i > mri_pulse_wait
+	begin
+		if (pulse_manager.main_pulse_count() > pulses) then
+			pulses = pulse_manager.main_pulse_count();   
+			int time = pulse_manager.main_pulse_time( pulses );
+			
+/*			text_1.set_caption(string(mri_pulse_wait - i));
+			text_1.set_font_size(48);
+			text_1.redraw();
+			trial_text.set_duration(500);
+			trial_text.present();
+*/			
+			i=i+1;
+		end;
+	end;
+	
+	ofile1.print("StartTime (after " + 
+	string(mri_pulse_wait) + ". scanner pulse) = \t" + string(clock.time()) + "\n");        	# log start time after MRI pulse
+end;
+
+#----------------------------------------------------------------------------------------------------------
 sub WriteHeader ( string sFilename) 
 begin
 
