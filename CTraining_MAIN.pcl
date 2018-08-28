@@ -1,0 +1,64 @@
+########### SESSION 1 ###########
+
+########### initiation ###########
+
+include "CTraining_INFO.pcl";		# Include all the variables.
+include "CTraining_SUBS.pcl";		# Include all the subroutines.
+# Loop until the clock is no longer negative.
+loop until clock.time() >= 0 begin end; 	
+
+########### welcome ###########
+
+# present a blank screen 
+default.present(); 
+
+# Present welcome screen, continue with enter
+p_welcome.present();		 
+WaitForButtonpress( button_enter );
+
+# Prepare logfile
+Get_subj_info("Please enter subject code, e.g. sub_01.");
+outputfilename = SubjID + "-log.txt";
+WriteHeader( outputfilename );	               
+
+# Present instruction screen for object naming, continue with enter
+p_instr.present();		 
+WaitForButtonpress( button_enter );
+
+########### training ###########
+
+training();
+
+########### experiment ###########
+
+nr_trials = 0;
+blocknr = 1;
+runnr =1 ;
+
+# We present 3 runs x 32 miniblocks with 20s breaks between runs
+
+loop int i = 1 until i > 3  # 3 runs
+begin
+	showBlock(); # Presenting 32 miniblocks
+	
+	# Showing pause screen after each run
+	if TrialType == "E" && i < 3 then # This is to not show the pause during training and after the last run
+	
+		t_pause_1b.set_caption("This was block " + string(runnr) + " of 3 blocks.");
+		t_pause_1b.redraw();
+		p_pause.present(); # Present pause screen
+		s_beep.present(); # Present beep signal for experimenter
+		
+		WaitForButtonpress( button_enter ); # Wait for experimenter to continue
+		
+		runnr = runnr + 1;
+	end; 
+	
+	i = i + 1;
+	
+end;
+
+########### the end ###########
+     
+EndFinalScreen();
+
