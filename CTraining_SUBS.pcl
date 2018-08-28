@@ -1,0 +1,370 @@
+######################## CONDITION INFO SUBS ##############################
+
+
+################################################### 
+
+#-----------------------------Wait------------------------------------
+sub Wait(int dur_wait2) begin
+   time_wait = clock.time();
+   loop until clock.time() >= time_wait + dur_wait2
+   begin end;
+end;
+
+#-----------------------------Wait FromTo------------------------------------
+sub WaitFromTo(int time_point, double dur_wait2) begin
+   time_wait = time_point;
+   loop until clock.time() >= time_wait + dur_wait2
+   begin end;
+end;
+
+#-----------------------------Wait for a certain button to be pressed------------------------------------
+sub WaitForButtonpress( int button ) begin
+    
+   loop count_old = response_manager.total_response_count(button)
+   until response_manager.total_response_count(button) > count_old
+   begin end;
+   
+end;
+
+#-------------Get Info--------------------------
+# this is our subroutine to ask interactively for any information we want
+sub GetInfo ( string sInputstr )
+begin
+	t_info1.set_caption ( sInputstr );
+	t_info1.redraw();
+	t_info2.set_caption ( " " );
+	t_info2.redraw();
+	
+	p_info.present();
+	
+	system_keyboard.set_case_mode( 3 );                    # Capital letters also possible
+	sInfo = system_keyboard.get_input( p_info, t_info2 ); # Using backspace key possible
+end;
+
+#--------------------------Get Subj Info: -------------------------------------
+
+# this routine is useful when several subjects get the same list or when you want to add special subject info to your logfile
+sub Get_subj_info(string inpstr1) begin
+
+	t_info1.set_caption(inpstr1);
+	t_info1.redraw();
+	p_info.present();
+	system_keyboard.set_case_mode(3);                       # Capital letters possible
+	SubjID = system_keyboard.get_input( p_info, t_info2 ); # Using backspace key possible
+
+end;
+
+#----------------------------- Concentric circles ------------------------------------
+
+sub redlight begin
+	loop int j = 1 until j == 3 begin # Do this twice
+		if direction == 1 then
+			# putting the red inward circles in the picture and presenting them
+			loop int i = 1 until i > redsurfaces.count()
+			begin
+				pic.set_part( 1, redsurfaces[i] );
+				trial1.present();
+				wait_interval(20);
+				i = i + 1;
+			end;
+		elseif direction == 2 then	
+			# putting the red outward circles in the picture and presenting them
+			loop int i = 1 until i > redsurfaces.count()
+			begin
+				pic.set_part( 1, redsurfaces[redsurfaces.count()+1 - i] );
+				trial1.present();
+				wait_interval(20);
+				i = i + 1;
+			end;
+		end;
+	j = j + 1;	
+	end;
+end;
+
+sub greenlight begin
+	loop int j = 1 until j == 3 begin # Do this twice
+		if direction == 1 then
+			# putting the green inward circles in the picture and presenting them
+			loop int i = 1 until i > greensurfaces.count()
+			begin
+				pic.set_part( 1, greensurfaces[i] );
+				trial1.present();
+				wait_interval(20);
+				i = i + 1;
+			end;
+		elseif direction == 2 then
+			# putting the green outward circles in the picture and presenting them
+			loop int i = 1 until i > greensurfaces.count()
+			begin
+				pic.set_part( 1, greensurfaces[greensurfaces.count()+1 - i] );
+				trial1.present();
+				wait_interval(20);
+				i = i + 1;
+			end;
+		end;
+	j = j + 1;	
+	end;
+end;
+
+sub reddark begin
+	loop int j = 1 until j == 3 begin # Do this twice
+		if direction == 1 then
+			# putting the red inward circles in the picture and presenting them
+			loop int i = 1 until i > redsurfaces.count()
+			begin
+				pic.set_part( 1, redsurfaces[i] );
+				trial1.present();
+				wait_interval(20);
+				i = i + 1;
+			end;
+		elseif direction == 2 then	
+			# putting the red outward circles in the picture and presenting them
+			loop int i = 1 until i > redsurfaces.count()
+			begin
+				pic.set_part( 1, redsurfaces[redsurfaces.count()+1 - i] );
+				trial1.present();
+				wait_interval(20);
+				i = i + 1;
+			end;
+		end;
+	j = j + 1;	
+	end;
+end;
+
+sub greendark begin
+	loop int j = 1 until j == 3 begin # Do this twice
+		if direction == 1 then
+			# putting the green inward circles in the picture and presenting them
+			loop int i = 1 until i > greensurfaces.count()
+			begin
+				pic.set_part( 1, greensurfaces[i] );
+				trial1.present();
+				wait_interval(20);
+				i = i + 1;
+			end;
+		elseif direction == 2 then
+			# putting the green outward circles in the picture and presenting them
+			loop int i = 1 until i > greensurfaces.count()
+			begin
+				pic.set_part( 1, greensurfaces[greensurfaces.count()+1 - i] );
+				trial1.present();
+				wait_interval(20);
+				i = i + 1;
+			end;
+		end;
+	j = j + 1;	
+	end;
+end;
+
+############################ LOGFILE #######################   
+
+#----------------------------------------------------------------------------------------------------------
+sub WriteHeader ( string sFilename) 
+begin
+
+	string sOutputLine = "";
+	sOutputLine.append("SubjID");   
+	sOutputLine.append("\t");	
+	sOutputLine.append("TrialNr");   
+	sOutputLine.append("\t");	
+	sOutputLine.append("Color");   
+	sOutputLine.append("\t");	
+	sOutputLine.append("BlockNr");   
+	sOutputLine.append("\t");	
+	sOutputLine.append("RunNr");   
+	sOutputLine.append("\t");		
+	sOutputLine.append("Direction");   
+	sOutputLine.append("\t");
+	sOutputLine.append("ResponseExpected");   
+	sOutputLine.append("\t");
+	sOutputLine.append("ResponseGiven");   
+	sOutputLine.append("\t");
+	sOutputLine.append("Correct");   
+	sOutputLine.append("\t");	
+	sOutputLine.append("CircleStartTime");   
+	sOutputLine.append("\t");
+	sOutputLine.append("CircleEndTime");   
+	sOutputLine.append("\t");
+	sOutputLine.append("CircleDuration");   
+	sOutputLine.append("\n");
+
+   ofile1.open_append( sFilename );      # don't overwrite file, if it already exists, but open to append!
+   ofile1.print( sOutputLine );          # create header of output file
+   ofile1.close();
+   ofile1.close();
+end;
+
+#-----------------------------WriteOutput-------------------
+
+sub WriteOutput( string sFilename ) 
+begin
+
+   string sOutputLine = "";
+
+	sOutputLine.append(SubjID);     #write contents of variables followed by a tab 
+	sOutputLine.append("\t");
+	sOutputLine.append(string(nr_trials));     
+	sOutputLine.append("\t");	
+	sOutputLine.append(miniblock);     
+	sOutputLine.append("\t");
+	sOutputLine.append(string(blocknr));     
+	sOutputLine.append("\t");
+	sOutputLine.append(string(runnr));     
+	sOutputLine.append("\t");	
+	sOutputLine.append(string(direction));     
+	sOutputLine.append("\t");	
+	sOutputLine.append(string(ExpectedResponse));     
+	sOutputLine.append("\t");	
+	sOutputLine.append(string(Response));     
+	sOutputLine.append("\t");
+	sOutputLine.append(string(correct));     
+	sOutputLine.append("\t");
+	sOutputLine.append(string(circle_start_time));     
+	sOutputLine.append("\t");
+	sOutputLine.append(string(circle_end_time));   
+	sOutputLine.append("\t");  
+	sOutputLine.append(string(circle_end_time-circle_start_time));     
+	sOutputLine.append("\n");
+
+   ofile1.open_append( sFilename );      # don't overwrite file, if it already exists, but open to append!
+   ofile1.print( sOutputLine );          # create header of output file
+   ofile1.close();
+
+end;
+
+#-----------------------------Collect response-------------------
+
+sub collectResponse begin
+	
+	if response_manager.total_response_count(button_yes) > count_old_yes && response_manager.total_response_count(button_no) == count_old_no then
+		Response = 1; # response is yes
+	elseif response_manager.total_response_count(button_no) > count_old_no && response_manager.total_response_count(button_yes) == count_old_yes then
+		Response = 0; # response is no
+	elseif (response_manager.total_response_count(button_yes) == count_old_yes) && (response_manager.total_response_count(button_no) == count_old_no)then 
+		Response = -1; # record no response given 
+	else # multiple responses given, this means that the last response of multiple responses is registered
+		if response_manager.last_response() == 2 then
+			Response = 1; # response is yes
+		elseif  response_manager.last_response()  == 3 then
+			Response = 0; # response is no
+		end;
+	end;	
+	
+end;
+
+#-----------------------------Show blocks and miniblocks-------------------
+
+sub showMiniBlock begin
+	
+	loop int i = 1 until i > 4  # show 4 trials per miniblock
+	begin
+		
+		# Save number of responses before circle begins
+		count_old_yes = response_manager.total_response_count(button_yes);
+		count_old_no = response_manager.total_response_count(button_no);
+		
+		circle_start_time = clock.time();
+		
+		direction = random(1,2);	# direction picked randomly, like B&H
+		
+		if miniblock == "greenlight" then
+			greenlight();
+		elseif miniblock == "redlight" then	
+			redlight();
+		elseif miniblock == "greendark" then	
+			greendark();			
+		elseif miniblock == "reddark" then	
+			reddark();
+		end;
+		
+		circle_end_time = clock.time();
+		
+		collectResponse(); # This only registers the -last- answer that was given during presentation of the circle
+		
+		nr_trials = nr_trials + 1;
+		
+		# fixation cross between trials
+		fixation_cross.present();
+		Wait(1000);
+			
+		if colourOld == miniblock && directionOld == direction then
+			ExpectedResponse = 1 # same trial as last trial, one back answer should be yes
+		else
+			ExpectedResponse = 0; # trial is different from last trial, answer should be no
+		end;
+		
+		# Check if answer was correct
+		if Response == ExpectedResponse then
+			correct = 1;
+		else
+			correct = 0;
+		end;		
+		
+		colourOld = miniblock; # save trial for one back task
+		directionOld = direction; # save trial for one back task
+		
+		# Write current trial to output, training trials are not written to file
+		if TrialType == "E" then
+			WriteOutput(outputfilename);
+		end;
+		
+		i = i + 1;
+	end;
+	
+end;
+
+sub showBlock begin
+	# present 32 miniblocks [8*4 miniblock types]
+	
+	loop int j = 1 until j > 8 
+	begin
+	
+		miniblocks.shuffle();
+		
+		loop until miniblocks[1] != lastminiblock begin # this is to make sure miniblock don't repeat
+			miniblocks.shuffle();
+		end;
+		
+		loop int i = 1 until i > miniblocks.count()
+		begin
+			miniblock = miniblocks[i];
+	
+			showMiniBlock();
+		
+			lastminiblock = miniblock;
+	
+			i = i + 1;
+			
+			blocknr = blocknr + 1;
+		end;
+		
+	j = j + 1;
+	end;
+end;
+
+sub training begin
+	
+	TrialType = "T";
+	
+	# Ask if training should be continued
+	p_training.present(); 
+	WaitForButtonpress( button_enter );
+	
+	miniblock = "greenlight";
+	showMiniBlock();
+	
+	TrialType = "E";
+	
+	p_training_end.present(); 		
+	WaitForButtonpress( button_enter );
+	
+end;
+
+#######################final screen############################                                                       
+
+sub EndFinalScreen begin
+	
+	# Show thank you/experiment is over screen and wait for button press (enter)
+	p_end_1.present();
+	WaitForButtonpress( button_enter );
+end;  
