@@ -101,7 +101,6 @@ trial {
 	picture pic;
 }trial1;
 
-
 picture { text { caption = "Welcome!"; } t_welcome_1a; x = 0; y = 1;  
         text { caption = "This part of the experiment will last";}t_welcome_1b; x = 0; y = 0; 
 		text { caption = "approximately 20 minutes.";}t_welcome_1c; x = 0; y = -1;
