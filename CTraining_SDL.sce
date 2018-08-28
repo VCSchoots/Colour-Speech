@@ -2,8 +2,11 @@
 
 # Initiation of the scenario and the main PCL-file
 
-no_logfile = true;
+scenario_type = fMRI_emulation;
 pcl_file = "CTraining_MAIN.pcl";
+pulse_code = 255;
+pulses_per_scan = 1;
+scan_period = 2000;
 
 # font
 default_background_color = 128,128,128; # adjust after calibration?
@@ -24,24 +27,6 @@ screen_width_distance = 17.87;# Skyra
 screen_height_distance = 13.39;# Skyra
 # set screen_distance to distance between screen and eyes of subject
 screen_distance = 30.12;# Skyra
-
-/**
-## This part makes presentation use visual angle (in degrees) in stead of pixels for visual stimuli
-# set these to screen measurements in inches
-screen_width_distance = 17.87;# Skyra
-screen_height_distance = 13.39;# Skyra
-# set screen_distance to distance between screen and eyes of subject
-screen_distance = 30.12;# Skyra
-**/
-
-/**
-## This part makes presentation use visual angle (in degrees) in stead of pixels for visual stimuli
-# set these to screen measurements in inches
-screen_width_distance = 17.87;# Skyra
-screen_height_distance = 13.39;# Skyra
-# set screen_distance to distance between screen and eyes of subject
-screen_distance = 30.12;# Skyra
-**/
 
 # keep SDL as simple as possible and stay clear of the parallel port
 response_matching = simple_matching;
@@ -100,6 +85,7 @@ trial {
 	trial_duration = stimuli_length;
 	picture pic;
 }trial1;
+
 
 picture { text { caption = "Welcome!"; } t_welcome_1a; x = 0; y = 1;  
         text { caption = "This part of the experiment will last";}t_welcome_1b; x = 0; y = 0; 
