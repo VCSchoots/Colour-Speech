@@ -219,6 +219,7 @@ begin
 	sOutputLine.append("\n");
 
    ofile1.open_append( sFilename );      # don't overwrite file, if it already exists, but open to append!
+   writeFirstPulse();						  # noting the time of the pulse that precedes the experiment
    ofile1.print( sOutputLine );          # create header of output file
    ofile1.close();
    ofile1.close();
