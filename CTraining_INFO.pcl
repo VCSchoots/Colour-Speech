@@ -1,0 +1,133 @@
+# -------------------------- BUTTON CODES -----------------------------
+
+int button_enter    = 1;  # ENTER-button for experimenter and subject
+int button_yes    = 2;  # yes button for subject, define in settings (instructions assume left for yes)
+int button_no    = 3;  # no button for subject, define in settings (instructions assume right for no)
+
+
+# -------------------------- Circles -----------------------------
+
+### definitions ###
+# set the brightness values for the rgb channels that the maximum brightness should have
+array <double> brightred[3]   = {255.0, 0, 0};
+array <double> darkred[3]     = {200.0, 0, 0};
+array <double> brightgreen[3] = {0, 255.0, 0};
+array <double> darkgreen[3]   = {0, 200.0, 0};
+# and the background colour
+array <double> background[3]  = {127.5, 127.5, 127.5};
+#these can later be replaced by values depending on the calibration
+# at the Skyra that Vincent will do with Paul, and on the individual participant. I'll think it through later, just leave them for now.
+
+array <string> miniblocks[4] = {"greenlight","greendark","redlight","reddark"}; # list of all miniblocks to present
+string miniblock;
+string lastminiblock;
+
+###################
+
+# calculate the necessary background and amplitude numbers for the sine waves used in stimulus generation
+array<double> BR[6];# BR for 'Bright Red', array to be filled with {red background, red amplitude, g backgr, g amp, b backgr, b amp}
+BR[1] = (brightred[1] + background[1])/ 2.0;# red channel background (difference between brightest and darkest halved)
+BR[2] = (brightred[1] - background[1])/ 2.0;# red channel amplitude (average of brightest and darkest)
+BR[3] = (brightred[2] + background[2])/ 2.0;# green backgr (same thing, but inverted so that the period is inverse to that of the red channel)
+BR[4] = (brightred[2] - background[2])/ 2.0;# green amp
+BR[5] = (brightred[3] + background[3])/ 2.0;# blue
+BR[6] = (brightred[3] - background[3])/ 2.0;# blue
+
+# making an array of graphic surfaces with red-and-grey circles moving inward on each iteration
+vsg::circular_generator circlegen = new vsg::circular_generator( 1.0, 0.0, false );# the sinusoid circles are generated, perodicity in half deg. visual angle PER CYCLE, so 1.0 is 0.5 cycles per degree. I know. Weird.
+array<graphic_surface>redsurfaces[30];# empty surfaces
+vsg::graphic_generator graph_gen = new vsg::graphic_generator( 33.0, 25.0 );
+graph_gen.add_transformation( circlegen, vsg::combine_none );
+graph_gen.add_parameter_increment( circlegen, vsg::phase, 12 );# 1/30 * 360 deg = 7.2 (not degree visual angle, but degree of the phase
+graph_gen.set_colors( BR[1], BR[2], BR[3], BR[4], BR[5], BR[6] );# red-and-grey circles
+graph_gen.draw( redsurfaces, 30 );
+
+# making an array of green-and-grey inward moving circles
+array<graphic_surface>greensurfaces[30];# empty surfaces
+graph_gen.set_colors( 63.75, -63.75, 191.25, 63.75, 63.75, -63.75 );# green-and-grey circles
+graph_gen.draw( greensurfaces, 30 );
+
+# making a mask that sets the screen surrounding the cicrles to grey
+vsg::ellipse_generator ellipsegen = new vsg::ellipse_generator( 7.19, 7.19, 0.0 );# an ellipse to act as a mask
+vsg::graphic_generator graph_gen2 = new vsg::graphic_generator( 33.0, 25.0 );
+graph_gen2.add_transformation( ellipsegen, vsg::combine_none );
+graph_gen2.set_colors( 63.75, -63.75, 63.75, -63.75, 63.75, -63.75 );# grey background, black circle
+graphic_surface mask = graph_gen2.create();
+mask.set_transparent_color( 0, 0, 0 );
+
+# putting the mask in the picture
+pic.set_part( 2, mask );
+
+#fixation.set_background_color(int (background[1]), int (background[2]), int (background[3]) );
+fixation.set_background_color(127,127,127);
+
+
+# -------------------------- LOGFILE -----------------------------
+
+# To initiate the logfile, get the standard file location and name from Directories & Logfiles tabs
+string path = logfile_directory;
+string stimpath = stimulus_directory;
+string subjectname = logfile.subject();
+
+# Some temporary variables for filenames
+string input;
+string main;
+string filepath;
+
+input_file InputFile = new input_file;
+string inputfilename;
+
+output_file ofile1 = new output_file;
+string outputfilename;
+
+#output_port oport = output_port_manager.get_port( 1 );   # handling the port for sending triggers for EEG
+
+# ---------------------OTHER VARIABLES INITIATION ----------------------------
+string colourOld; # for one back task
+int directionOld; # for one back task
+string colour; # for one back taskint direction; # for one back task
+int direction;
+
+int security = 10; # subtract 10 ms because of screen refresh rate
+
+int Response;
+int ExpectedResponse;
+int correct;
+
+string TrialType;
+
+
+string sHeader;
+string sInfo;
+string sListNR;
+string SubjID;
+string ListInfo;
+
+int blocknr;
+int runnr;
+int circle_start_time;
+int circle_end_time;
+int iLines;
+int count_old;
+int count_old_continue_button;
+int count_stim;
+int dur_wait;
+int time_wait;
+int trial_end_time;
+int trial_begin_time;
+int left_time;
+int index;
+int wav_duration;    # if you have WAV-files as input
+int start_fixation;  # starting time point of the fixation cross
+int nr_fields;
+int nr_trials;
+int version;
+int expStarted;
+int count_old_yes;
+int count_old_no;
+
+# --------------------- OUTPUT FILE VARIABLES INITIATION ---------------------------;
+int question_onset_time;
+int response_onset_time;
+int response_time;
+int end_loop_time;
