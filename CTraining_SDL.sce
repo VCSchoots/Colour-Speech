@@ -9,7 +9,7 @@ pulses_per_scan = 1;
 scan_period = 2000;
 
 # font
-default_background_color = 128,128,128; # adjust after calibration?
+default_background_color = 82,82,82; # mid grey
 default_font = "arial";
 #default_font_size = 20;
 default_text_color = 255,255,255; # white
