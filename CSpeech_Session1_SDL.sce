@@ -22,7 +22,7 @@ active_buttons = 3;
 button_codes = 1,2,3;  # 1 = ENTER-exp-subj # 2 yes # 3 no
 
 # basic colours and fonts
-default_background_color = 240,240,240; # grey as in PPM, adjust to picture background
+default_background_color = 82,82,82; # grey as in PPM, adjust to picture background
 default_font = "arial";
 default_font_size = 20;
 default_text_color = 0,0,0; # black
@@ -131,7 +131,7 @@ sound_recording {
 
 ####### visual stimuli ########
 
-picture { bitmap { filename = "Pictures\\empty.bmp"; preload = true; width = 300; height = 300; transparent_color = 255,255,255;} b_target; x = 0; y = 0;
+picture { bitmap { filename = "Pictures\\empty.bmp"; preload = true; width = 300; height = 300;} b_target; x = 0; y = 0;
           box { height = 2; width = 30; color = 0, 0, 0; } horz_s_pic;
 			 x = 0; y = 0;
 			 box { height = 30; width = 2; color = 0, 0, 0; } vert_s_pic;
