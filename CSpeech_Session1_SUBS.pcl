@@ -426,7 +426,7 @@ sub RunTrials begin
 		WaitFromTo(target_onset_time, target_duration);
 		default.present();
 		
-		if expStarted == 1 then
+		if expStarted == 1 && ~ispilot then
 			#recording.set_duration(jitter1[iLines]*1000)-security + 2000 + (jitter2[iLines]*1000)-security));
 			recording.set_duration(5000);
 			recording.set_base_filename("Soundfiles\\" + "nospeechtrial_" + sInfo + "_" + ListInfo + "_" + task + "_" +  trial_nr[iLines]  + "_" + target_pict[iLines]);
@@ -444,7 +444,7 @@ sub RunTrials begin
 		#s_beep.present();
 		
 		# record answer, not during training
-		if expStarted == 1 then
+		if expStarted == 1 && ~ispilot then
 			#recording.set_duration(jitter1[iLines]*1000)-security + 2000 + (jitter2[iLines]*1000)-security));
 			recording.set_duration(5000);
 			recording.set_base_filename("Soundfiles\\" + "speechtrial_" + sInfo + "_" + ListInfo + "_" + task + "_" +  trial_nr[iLines]  + "_" + target_pict[iLines]);
