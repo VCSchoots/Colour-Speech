@@ -480,7 +480,7 @@ sub RunTrials begin
 		WriteOutput(outputfilename);
 	end;
 	
-	if mod(iLines,100) == 0 # Pause after each block of 100 items, change if you want pauses in other places
+	if mod(trial_count[iLines],100) == 0 # Pause after each block of 100 items, change if you want pauses in other places
 	then
 		# present pause screen with instructions and how to continue
 		# lasts as long as specified in INFO file
