@@ -151,7 +151,11 @@ begin
 			# Change first line to indicate that file has been used
 			ofile1.open( sFilename, true );      # overwrite file
 			
-			ofile1.print("!\n" );	
+			if ispilot then
+			else
+				ofile1.print("!\n" );	
+			end;
+			
 			ofile1.print(sHeader);
 			ofile1.print("\n" );
 
@@ -161,8 +165,6 @@ begin
 				j > iLines
 			begin
 				inputlines[j].split ( "\;", inputfields);
-				term.print(inputfields);
-	
 				loop int k = 1;
 				until k > inputfields.count()
 				begin
@@ -222,8 +224,14 @@ begin
 	# inputfile name
 
 	if expStarted == 0 then
-		inputfilename = "Lists\\Practice.txt";
-		InputfileHandlingTrain(inputfilename);
+		term.print_line(ispilot);
+		if ispilot then
+			inputfilename = "Lists\\PilotPractice.txt";
+		else
+			inputfilename = "Lists\\Practice.txt";
+		end;
+		
+	InputfileHandlingTrain(inputfilename);
 	else
 		GetInfo( sInputfileInfo );
 		sListNR = sInfo;
@@ -362,9 +370,14 @@ end;
 
 # present a countdown screen and print the time of the 31st scan trigger to Log file
 
-sub countdown( string sFilename ) begin
+sub countdown( string sFilename) begin
 	
-	int mri_pulse_wait = 30; # number of MRI pulses to wait
+	int mri_pulse_wait = 30;
+	
+	if ispilot then
+		mri_pulse_wait = 2; # number of MRI pulses to wait
+	end;
+	
 	int pulses = pulse_manager.main_pulse_count();
 	
 	loop
@@ -372,7 +385,7 @@ sub countdown( string sFilename ) begin
 	until pulsecount > mri_pulse_wait begin
 		if (pulse_manager.main_pulse_count() > pulses) then# as soon as another pulse is sent
 			pulses = pulse_manager.main_pulse_count();   
-			t_countdown.set_caption("Wachten op de scanner...\n" + string( 31 - pulsecount) );
+			t_countdown.set_caption("Wachten op de scanner...\n" + string( mri_pulse_wait+1 - pulsecount) );
 			t_countdown.redraw();
 			p_countdown.present();
 			pulsecount = pulsecount + 1;
