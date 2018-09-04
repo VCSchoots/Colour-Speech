@@ -426,7 +426,7 @@ sub RunTrials begin
 		WaitFromTo(target_onset_time, target_duration);
 		default.present();
 		
-		if expStarted == 1 && ~ispilot then
+		if expStarted == 1 && ispilot != true then
 			#recording.set_duration(jitter1[iLines]*1000)-security + 2000 + (jitter2[iLines]*1000)-security));
 			recording.set_duration(5000);
 			recording.set_base_filename("Soundfiles\\" + "nospeechtrial_" + sInfo + "_" + ListInfo + "_" + task + "_" +  trial_nr[iLines]  + "_" + target_pict[iLines]);
@@ -444,7 +444,7 @@ sub RunTrials begin
 		#s_beep.present();
 		
 		# record answer, not during training
-		if expStarted == 1 && ~ispilot then
+		if expStarted == 1 && ispilot != true then
 			#recording.set_duration(jitter1[iLines]*1000)-security + 2000 + (jitter2[iLines]*1000)-security));
 			recording.set_duration(5000);
 			recording.set_base_filename("Soundfiles\\" + "speechtrial_" + sInfo + "_" + ListInfo + "_" + task + "_" +  trial_nr[iLines]  + "_" + target_pict[iLines]);
@@ -481,7 +481,7 @@ sub RunTrials begin
 	end;
 	
 	# Pause after each block of 100 items (but not after the 400th trial, which should be the end)
-	if mod(trial_count[iLines],100) == 0 && trial_count[iLines] < 400
+	if (trial_count[iLines] == 100 || trial_count[iLines] == 200 || trial_count[iLines] == 300) && trial_count[iLines] < 400 #mod(trial_count[iLines],100) == 0 && trial_count[iLines] < 400
 	then
 		# present pause screen with instructions and how to continue
 		# lasts as long as specified in INFO file
