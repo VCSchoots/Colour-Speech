@@ -1,0 +1,49 @@
+########### SESSION 1 ###########
+
+########### initiation ###########
+
+include "CSpeech_Training_Session1_INFO.pcl";		# Include all the variables.
+include "CSpeech_Training_Session1_SUBS.pcl";		# Include all the subroutines.
+# Loop until the clock is no longer negative.
+loop until clock.time() >= 0 begin end; 	
+
+########### welcome ###########
+
+# present a blank screen 
+default.present(); 
+
+# Present welcome screen, continue with enter
+p_welcome.present();		 
+WaitForButtonpress( button_enter );
+
+########### object naming part ###########
+
+# Present instruction screen for object naming, continue with enter
+p_instr_naming.present();		 
+WaitForButtonpress( button_enter );
+
+p_instr_naming2.present();		 
+WaitForButtonpress( button_enter );
+
+p_instr_naming3.present();		 
+WaitForButtonpress( button_enter );
+
+training();
+
+# Waits for Enter to go on to the next part (i.e., specifying the input list for the real experiment)
+p_aftertraining.present(); 
+WaitForButtonpress( button_enter );
+
+########### semantic judgement part ###########
+
+# Present instruction screen for semantic judgement, continue with enter
+p_instr_judgement.present();		 
+WaitForButtonpress( button_enter );
+
+training();
+default.present(); # present a blank screen 
+
+########### the end ###########
+     
+EndFinalScreen();
+
