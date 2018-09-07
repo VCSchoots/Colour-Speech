@@ -69,7 +69,7 @@ slot maken we een anatomische scan van tien minuten.
 
 picture { text { caption = "Deel 1: Plaatjes Benoemen
 
-Je krijgt een serie plaajtes te zien. Het is de bedoeling
+Je krijgt een serie plaatjes te zien. Het is de bedoeling
 dat je stil (in je hoofd) de plaatjes benoemd (dus: als
 je een vleermuis ziet, zeg je in je hoofd 'vleermuis').
 Af en toe komt er na het plaatje een stip in beeld. 
@@ -79,8 +79,8 @@ uitspreken (we nemen je respons op)."; } t_instruction_naming_1; x = 0; y = 0;
 
 picture { text { caption =
 "Je krijgt nu eerst een oefenronde, zodat je kunt wennen
-aan de taak in de scanner. Het is tijdens het hele ex-
-periment BELANGRIJK DAT JE JE BLIK IN HET MIDDEN HOUDT,
+aan de taak in de scanner. Het is tijdens het hele experiment
+BELANGRIJK DAT JE JE BLIK IN HET MIDDEN HOUDT,
 op het kruis of de stip, ook als het plaatje komt. De
 plaatjes in de oefenronde zijn andere dan in het experiment."; } t_traininginstr_1; x = 0; y = 0;  
 } p_instr_training;
