@@ -1,0 +1,88 @@
+# -------------------------- BUTTON CODES -----------------------------
+
+int button_enter    = 1;  # ENTER-button for experimenter and subject
+int button_yes    = 2;  # yes button for subject
+int button_no    = 3;  # no button for subject
+
+# -------------------------- LOGFILE -----------------------------
+
+# To initiate the logfile, get the standard file location and name from Directories & Logfiles tabs
+string path = logfile_directory;
+string stimpath = stimulus_directory;
+string subjectname = logfile.subject();
+
+# Some temporary variables for filenames
+string input;
+string main;
+string filepath;
+string wavefilename;
+string bitmapfilename;
+
+input_file InputFile = new input_file;
+string inputfilename;
+
+output_file ofile1 = new output_file;
+string outputfilename;
+
+#output_port oport = output_port_manager.get_port( 1 );   # handling the port for sending triggers for EEG
+
+# ---------------------OTHER VARIABLES INITIATION ----------------------------
+
+string sHeader;
+string sInfo;
+string sListNR;
+string subj_nr;
+string letter;
+
+int contTraining;
+int iLines;
+int iNrTrials;
+int count_old;
+int count_old_continue_button;
+int count_stim;
+int dur_wait;
+int time_wait;
+int trial_end_time;
+int trial_begin_time;
+int left_time;
+int index;
+int wav_duration;    # if you have WAV-files as input
+int start_fixation;  # starting time point of the fixation cross
+int nr_fields;
+int nr_trials;
+int version;
+int expStarted;
+int count_old_yes;
+int count_old_no;
+
+# --------------------- INPUT FILE VARIABLES INITIATION ----------------------------;
+
+int NR_TRIALS;# = 900;  # Change this to a bigger number if you have more trials in your input file
+int NR_COLUMNS = 10;   # Max number of columns in input file is 10, change if you need more
+                          
+array <string> inputlines[NR_TRIALS];             
+array <string> fields[NR_COLUMNS];                 
+array <string> trial_nr[NR_TRIALS];             		# training or filler or experimental or null trial
+array <string> color[NR_TRIALS];             		# red or green
+array <string> speech[NR_TRIALS];				# overt naming after cue on this trial yes or no
+array <string> target_pict[NR_TRIALS];             # object name, e.g. "crocodile"
+array <double>    jitter1[NR_TRIALS];                  # jitter1 
+array <double>    jitter2[NR_TRIALS];                  # jitter2
+array <double>    jitter3[NR_TRIALS];                  # jitter on null trials
+array <int> trial_count[NR_TRIALS];             # object name, e.g. "crocodile"
+
+# --------------------- OUTPUT FILE VARIABLES INITIATION ---------------------------;
+string task;
+int target_onset_time;
+int fix1_onset_time;
+int fix2_onset_time;
+int fix3_onset_time;
+int cue_onset_time;
+int end_loop_time;
+#string list;
+
+# --------------------- EXPERIMENT VARIABLES INITIATION ----------------------------;
+int security = 10;                         # we subtract the security of 15ms from every desired duration to be sure to be in the time frame we want (--> refresh rate issue)
+int target_duration   = 500 - security;   # the time the target picture will be presented
+int cue_duration   = 2000 - security;   # the time the target picture will be presented
+int pause_duration     = 120000 - security; # 2 minute break
