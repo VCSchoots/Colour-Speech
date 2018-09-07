@@ -73,7 +73,7 @@ Je krijgt een serie plaatjes te zien. Het is de bedoeling
 dat je stil (in je hoofd) de plaatjes benoemd (dus: als
 je een vleermuis ziet, zeg je in je hoofd 'vleermuis').
 Af en toe komt er na het plaatje een stip in beeld. 
-Terwijl die stip er staat, moet je het woord dan hardop
+Terwijl die stip er staat, moet je het woord hardop
 uitspreken (we nemen je respons op)."; } t_instruction_naming_1; x = 0; y = 0;  
 } p_instr_naming;
 
