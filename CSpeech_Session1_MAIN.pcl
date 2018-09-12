@@ -1,7 +1,7 @@
 ########### SESSION 1 ###########
 
 ########### initiation ###########
-bool ispilot = true; # set to FALSE when real deal begins. Makes sure testing is quicker.
+bool ispilot = false; # set to FALSE when real deal begins. Makes sure testing is quicker.
 
 include "CSpeech_Session1_INFO.pcl";		# Include all the variables.
 include "CSpeech_Session1_SUBS.pcl";		# Include all the subroutines.
@@ -9,9 +9,9 @@ include "CSpeech_Session1_SUBS.pcl";		# Include all the subroutines.
 loop until clock.time() >= 0 begin end; 	
 
 
-# Present welcome screen, continue with enter
+# Present welcome screen, continue with index finger
 p_welcome.present();		 
-WaitForButtonpress( button_enter );
+WaitForButtonpress( button_yes );
 
 ########### during localiser scans, start with eye calibration ############
 eyeCalib();
@@ -25,7 +25,7 @@ default.present(); # present a blank screen
 
 # Present instruction screen for object naming, continue with enter
 p_instr_naming.present();		 
-WaitForButtonpress( button_enter );
+WaitForButtonpress( button_yes );
 
 training();
 default.present(); # present a blank screen 
@@ -44,14 +44,14 @@ countdown( outputfilename);
 runExp();
 
 p_end_part1.present();
-WaitForButtonpress( button_enter );
+WaitForButtonpress( button_yes );
 
 ########### semantic judgement part ###########
 task = "judgement"; 
 
 # Present instruction screen for semantic judgement, continue with enter
 p_instr_judgement.present();		 
-WaitForButtonpress( button_enter );
+WaitForButtonpress( button_yes );
 
 training();
 default.present(); # present a blank screen 
