@@ -1,7 +1,7 @@
 ########### SESSION 1 ###########
 
 ########### initiation ###########
-bool ispilot = false; # set to FALSE when real deal begins. Makes sure testing is quicker.
+bool ispilot = true; # set to FALSE when real deal begins. Makes sure testing is quicker.
 
 include "CSpeech_Session1_INFO.pcl";		# Include all the variables.
 include "CSpeech_Session1_SUBS.pcl";		# Include all the subroutines.
