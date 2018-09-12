@@ -3,6 +3,7 @@
 int button_enter    = 1;  # ENTER-button for experimenter and subject
 int button_yes    = 2;  # yes button for subject
 int button_no    = 3;  # no button for subject
+int button_spacebar = 4;# SPACEBAR-button for experimenter
 
 # -------------------------- LOGFILE -----------------------------
 
@@ -26,6 +27,17 @@ string outputfilename;
 
 #output_port oport = output_port_manager.get_port( 1 );   # handling the port for sending triggers for EEG
 
+# ------------- EYETRACKER CALIBRATION VARIABLES INITIATION ------------------
+
+string evCode = crossevent.event_code();
+string newEvCode;
+string countStr;
+
+array <int> xarray [14] =  {0, -496, 496, -496, 496, -496, 0, 496, 0, -248, 248, -248, 248, 0}; 
+array <int> yarray [14] =  {0, 368, 368, -368, -368, 0, 368, 0, -368, 184, 184, -184, -184, 0}; 
+# visual angles are 16 degrees and 8 degrees out horizontally,
+# 12 and 6 degrees vertically.
+
 # ---------------------OTHER VARIABLES INITIATION ----------------------------
 
 string sHeader;
@@ -38,6 +50,7 @@ int contTraining;
 int iLines;
 int iNrTrials;
 int count_old;
+int count_old2;
 int count_old_continue_button;
 int count_stim;
 int dur_wait;
@@ -54,6 +67,11 @@ int version;
 int expStarted;
 int count_old_yes;
 int count_old_no;
+int i_response_exp;
+int endpoint;
+int divBy;
+
+array <int> breaktimes[3];
 
 # --------------------- INPUT FILE VARIABLES INITIATION ----------------------------;
 
