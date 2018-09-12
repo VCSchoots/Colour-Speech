@@ -1,5 +1,5 @@
 <ver>18.3</ver>
-<efn>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2\CSpeech_Session1.exp</efn>
+<efn>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1\CSpeech_Session1.exp</efn>
 <author></author>
 <con>
 <pause>W</pause>
@@ -34,14 +34,14 @@
 <lfn></lfn>
 </docs>
 <dp_list></dp_list>
-<dsd>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2</dsd>
+<dsd>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1</dsd>
 <dxv>8</dxv>
 <efs>
-<filename>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2\CSpeech_Session1_SDL.sce</filename>
-<filename>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2\CSpeech_Session1_SUBS.pcl</filename>
-<filename>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2\CSpeech_Session1.exp</filename>
-<filename>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2\CSpeech_Session1_INFO.pcl</filename>
-<filename>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2\CSpeech_Session1_MAIN.pcl</filename>
+<filename>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1\CSpeech_Session1_SDL.sce</filename>
+<filename>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1\CSpeech_Session1_SUBS.pcl</filename>
+<filename>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1\CSpeech_Session1.exp</filename>
+<filename>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1\CSpeech_Session1_INFO.pcl</filename>
+<filename>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1\CSpeech_Session1_MAIN.pcl</filename>
 </efs>
 <exclusive_mouse>1</exclusive_mouse>
 <exp_version></exp_version>
@@ -110,27 +110,43 @@
 <ilc>0</ilc>
 <ip_chans>
 <chan>
+<ivm></ivm>
+<mask></mask>
+<mode>0</mode>
 <name>trigger channel</name>
-<pindex>4294967295</pindex>
+<piai>COM3</piai>
+<pian>Serial Port</pian>
+<pihpn>COM3</pihpn>
+<pin>1</pin>
+<pindex>2</pindex>
+<sc>0</sc>
 </chan>
 <chan>
-<name>port</name>
-<pindex>4294967295</pindex>
+<ivm></ivm>
+<mask></mask>
+<mode>0</mode>
+<name>buttonbox</name>
+<piai>COM2</piai>
+<pian>Serial Port</pian>
+<pihpn>COM2</pihpn>
+<pin>1</pin>
+<pindex>1</pindex>
+<sc>0</sc>
 </chan>
 </ip_chans>
-<lfd>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2\Logfiles</lfd>
+<lfd>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1\Logfiles</lfd>
 <lnb>2</lnb>
-<lno>0</lno>
+<lno>3</lno>
 <log>
 <append_counter>0</append_counter>
 <delimiter>9</delimiter>
-<general_list>0</general_list>
+<general_list>1</general_list>
 <its>0</its>
 <pien>0</pien>
 <set_def_file></set_def_file>
 <stimulus_list>0</stimulus_list>
-<subject_id></subject_id>
-<subject_id_pol>0</subject_id_pol>
+<subject_id>plt_001</subject_id>
+<subject_id_pol>2</subject_id_pol>
 <video_list>0</video_list>
 <warnings>1</warnings>
 </log>
@@ -138,10 +154,20 @@
 <lpr></lpr>
 <lsl>0</lsl>
 <maxpv>-1</maxpv>
-<minpv>19</minpv>
+<minpv>-1</minpv>
 <nam>CSpeech fMRI - Session 1</nam>
 <one_processor>2</one_processor>
-<oports></oports>
+<oports>
+<p>
+<cs></cs>
+<is></is>
+<os></os>
+<piai>COM2</piai>
+<pian>Serial Port</pian>
+<pihpn>COM2</pihpn>
+<pindex>1</pindex>
+</p>
+</oports>
 <out_encrypt_key></out_encrypt_key>
 <pi_list></pi_list>
 <port_devices>
@@ -153,14 +179,48 @@
 <dtr>disable</dtr>
 <rts>disable</rts>
 <set_fifo>1</set_fifo>
-<spd></spd>
-<spp></spp>
-<spr></spr>
-<sps></sps>
+<spd>8</spd>
+<spp>none</spp>
+<spr>115200</spr>
+<sps>1</sps>
 </parameters>
 <piai>COM1</piai>
 <pian>Serial Port</pian>
 <pihpn>COM1</pihpn>
+</device>
+<device>
+<parameters>
+<cts>0</cts>
+<dsrin>0</dsrin>
+<dsrout>0</dsrout>
+<dtr>disable</dtr>
+<rts>disable</rts>
+<set_fifo>1</set_fifo>
+<spd>8</spd>
+<spp>none</spp>
+<spr>115200</spr>
+<sps>1</sps>
+</parameters>
+<piai>COM2</piai>
+<pian>Serial Port</pian>
+<pihpn>COM2</pihpn>
+</device>
+<device>
+<parameters>
+<cts>0</cts>
+<dsrin>0</dsrin>
+<dsrout>0</dsrout>
+<dtr>disable</dtr>
+<rts>disable</rts>
+<set_fifo>1</set_fifo>
+<spd>8</spd>
+<spp>none</spp>
+<spr>115200</spr>
+<sps>1</sps>
+</parameters>
+<piai>COM3</piai>
+<pian>Serial Port</pian>
+<pihpn>COM3</pihpn>
 </device>
 <device>
 <parameters>
@@ -175,9 +235,43 @@
 <spr></spr>
 <sps></sps>
 </parameters>
-<piai>COM3</piai>
+<piai>COM4</piai>
 <pian>Serial Port</pian>
-<pihpn>COM3</pihpn>
+<pihpn>COM4</pihpn>
+</device>
+<device>
+<parameters>
+<cts>0</cts>
+<dsrin>0</dsrin>
+<dsrout>0</dsrout>
+<dtr>disable</dtr>
+<rts>disable</rts>
+<set_fifo>1</set_fifo>
+<spd></spd>
+<spp></spp>
+<spr></spr>
+<sps></sps>
+</parameters>
+<piai>COM5</piai>
+<pian>Serial Port</pian>
+<pihpn>COM5</pihpn>
+</device>
+<device>
+<parameters>
+<cts>0</cts>
+<dsrin>0</dsrin>
+<dsrout>0</dsrout>
+<dtr>disable</dtr>
+<rts>disable</rts>
+<set_fifo>1</set_fifo>
+<spd></spd>
+<spp></spp>
+<spr></spr>
+<sps></sps>
+</parameters>
+<piai>COM8</piai>
+<pian>Serial Port</pian>
+<pihpn>COM8</pihpn>
 </device>
 </port_devices>
 <rdl>
@@ -278,17 +372,17 @@
 <device>
 <device_type>4</device_type>
 <dx_device_type>17</dx_device_type>
-<name>Dell USB Keyboard</name>
+<name>HID-compliant consumer control device</name>
 </device>
 <device>
 <device_type>4</device_type>
 <dx_device_type>17</dx_device_type>
-<name>Dell USB Keyboard 1</name>
+<name>HID-compliant device</name>
 </device>
 <device>
 <device_type>4</device_type>
 <dx_device_type>17</dx_device_type>
-<name>Dell USB Keyboard 2</name>
+<name>HID-compliant device 1</name>
 </device>
 <device>
 <axis>
@@ -430,6 +524,15 @@
 <upc>0</upc>
 <uvt>1</uvt>
 </device>
+<device>
+<cn>buttonbox</cn>
+<device_type>11</device_type>
+<dif></dif>
+<dtf>0</dtf>
+<dx_device_type>0</dx_device_type>
+<name>buttonbox</name>
+<rr></rr>
+</device>
 </rdl>
 <refchg>1</refchg>
 <rep>1</rep>
@@ -443,22 +546,36 @@
 <sce>
 <idv>
 <device_type>3</device_type>
-<dx_device_type>19</dx_device_type>
-<ibn>ENTER</ibn>
-<ibn>LEFT</ibn>
-<ibn>RIGHT</ibn>
-<idn>Keyboard</idn>
+<dx_device_type>0</dx_device_type>
+<ibn>Enter</ibn>
+<idn>HID Keyboard Device</idn>
 <index>0</index>
+<label></label>
+<offset>28</offset>
+</idv>
+<idv>
+<device_type>11</device_type>
+<dx_device_type>0</dx_device_type>
+<ibn>97   ('a')</ibn>
+<ibn>98   ('b')</ibn>
+<idn>buttonbox</idn>
 <index>1</index>
 <index>2</index>
 <label></label>
 <label></label>
-<label></label>
-<offset>28</offset>
-<offset>203</offset>
-<offset>205</offset>
+<offset>97</offset>
+<offset>98</offset>
 </idv>
-<sfn>P:\3021005.23\Presentation\Presentation Session 1 and 2 07 08 v2\CSpeech_Session1_SDL.sce</sfn>
+<idv>
+<device_type>3</device_type>
+<dx_device_type>19</dx_device_type>
+<ibn>Space</ibn>
+<idn>Keyboard</idn>
+<index>3</index>
+<label></label>
+<offset>57</offset>
+</idv>
+<sfn>D:\Users\vinsch\CSpeech\Presentation Session 1 and 2 v2.1\CSpeech_Session1_SDL.sce</sfn>
 </sce>
 <sct>
 <capture_device>
@@ -469,7 +586,7 @@
 <freq>48000</freq>
 <ignore_drops>1</ignore_drops>
 <max_drops>250</max_drops>
-<name>Microphone (Realtek Audio)</name>
+<name>Line In (Realtek High Definition Audio)</name>
 <rec_vol>0.8</rec_vol>
 <show_drops>1</show_drops>
 </capture_device>
@@ -527,7 +644,7 @@
 <trigger_mode>
 <cn>trigger channel</cn>
 <m>0</m>
-<v>2</v>
+<v>97</v>
 <vt>0</vt>
 </trigger_mode>
 <udt>0</udt>
