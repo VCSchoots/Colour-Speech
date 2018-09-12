@@ -26,6 +26,19 @@ sub WaitForButtonpress( int button ) begin
    
 end;
 
+#-----------------------------Wait for either of two buttons to be pressed------------------------------------
+sub WaitForEitherButtonpress( int button, int button2 ) begin
+   
+   loop
+		count_old = response_manager.total_response_count(button);
+		count_old2 = response_manager.total_response_count(button2)
+   until
+		response_manager.total_response_count(button) > count_old || response_manager.total_response_count(button2) > count_old2
+   begin end;
+   
+end;
+
+
 #-------------Get Info--------------------------
 # this is our subroutine to ask interactively for any information we want
 sub GetInfo ( string sInputstr )
@@ -58,6 +71,7 @@ end;
 
 sub InputfileHandlingTrain ( string sFilename )
 begin
+	
 	# inputfile opening and storing of contents in separate lines
 	InputFile.open ( sFilename );
 	InputFile.set_delimiter ( '\n' );
@@ -143,7 +157,7 @@ begin
 			
 			outputfilename = sInfo + "_" + ListInfo + "_" + "log.txt"; # Save output filename
 
-			t_info1.set_caption("This is the current list: \n" + ListInfo);
+			t_info1.set_caption("Stimuluslijst: \n" + ListInfo);
 			t_info1.redraw();
 			p_info.present();
 			WaitForButtonpress( button_enter );
@@ -224,21 +238,22 @@ begin
 	# inputfile name
 
 	if expStarted == 0 then
-		term.print_line(ispilot);
+		term.print_line("ispilot: " + string(ispilot));
 		if ispilot then
 			inputfilename = "Lists\\PilotPractice.txt";
 		else
 			inputfilename = "Lists\\Practice.txt";
 		end;
 		
-	InputfileHandlingTrain(inputfilename);
-	else
-		GetInfo( sInputfileInfo );
+		GetInfo( sInputfileInfo );# ask for the subject code during practice already
 		sListNR = sInfo;
+		
+		InputfileHandlingTrain(inputfilename);
+	else
 		
 		# picking input file, opening inputfile and storing lines of inputfile in an array
 		InputfileHandlingExp();
-					
+		
 	end; 
 			
 	# number of trials in the input file is stored
@@ -285,7 +300,7 @@ begin
 end;
 
 
-############################ LOGFILE #######################   
+############################ LOGFILES #######################   
 
 
 #----------------------------------------------------------------------------------------------------------
@@ -366,6 +381,37 @@ begin
 
 end;
 
+
+########################### Eyetracker calibration #####################
+
+sub eyeCalib begin# not logged in main log, but in Presentation standard log and in the eye tracker log.
+	
+	text_eyetr.present();
+	
+	int counter = 1;
+	
+	loop until counter > xarray.count()
+	begin
+		
+		cross.set_part_x(1, xarray[counter]);
+		cross.set_part_y(1, yarray[counter]);
+		
+		cross.set_part_x(2, xarray[counter]);
+		cross.set_part_y(2, yarray[counter]);
+		
+		countStr = string( counter );
+		newEvCode = evCode;
+		newEvCode.append( countStr );# the event code for the Presentation log file is set to "calibr_cross1", "calibr_cross2", etc.)
+		crossevent.set_event_code(newEvCode);
+		crossevent.set_port_code(counter);# the code that is sent to the output port (eyetracker) is set to the cross nr. (1 = middle, 2 = left top, etc.)
+		
+		eyetrial.present();
+		
+		counter = counter + 1;
+	end;
+
+end;
+
 ############################ Scanner countdown #######################   
 
 # present a countdown screen and print the time of the 31st scan trigger to Log file
@@ -382,12 +428,15 @@ sub countdown( string sFilename) begin
 	
 	loop
 		int pulsecount = 1;
-	until pulsecount > mri_pulse_wait begin
-		if (pulse_manager.main_pulse_count() > pulses) then# as soon as another pulse is sent
-			pulses = pulse_manager.main_pulse_count();   
-			t_countdown.set_caption("Wachten op de scanner...\n" + string( mri_pulse_wait+1 - pulsecount) );
-			t_countdown.redraw();
-			p_countdown.present();
+	until pulsecount > mri_pulse_wait+1 begin # +1 because it breaks out of the loop as soon as the last number is on screen
+		if (pulse_manager.main_pulse_count() > pulses) then # as soon as another pulse is sent
+			pulses = pulse_manager.main_pulse_count();
+			if pulsecount <= mri_pulse_wait then # as long as the coutner is not at 1 yet
+				t_countdown.set_caption("Wachten op de scanner...\n" + string( mri_pulse_wait+1 - pulsecount) );
+				t_countdown.redraw();
+				p_countdown.present();
+			elseif pulsecount > mri_pulse_wait then #when the counter is at 1, do not flash a 0 before moving on
+			end;
 			pulsecount = pulsecount + 1;
 		end;
 	end;
@@ -412,6 +461,8 @@ end;
 #-----------------run trial------------------------------------
 
 sub RunTrials begin
+	
+	int runnr;# used during break
 		
 	# preloading picture 
 	if ((iLines) <= iNrTrials) && (target_pict[iLines] != "na") then	
@@ -480,15 +531,44 @@ sub RunTrials begin
 		WriteOutput(outputfilename);
 	end;
 	
-	# Pause after each block of 100 items (but not after the 400th trial, which should be the end)
-	if (trial_count[iLines] == 100 || trial_count[iLines] == 200 || trial_count[iLines] == 300) && trial_count[iLines] < 400 #mod(trial_count[iLines],100) == 0 && trial_count[iLines] < 400
+	if ispilot then
+		breaktimes = {11,13,15};
+		divBy = 1;
+	else
+		breaktimes = {100, 200, 300};
+		divBy = 100;
+	end;
+	
+	########## Break after each block of 100 items (but not after the 400th trial, which should be the end) ################
+	if (trial_count[iLines] == breaktimes[1] || trial_count[iLines] == breaktimes[2] || trial_count[iLines] == breaktimes[3])
 	then
+		runnr = trial_count[iLines]/divBy;
 		# present pause screen with instructions and how to continue
-		# lasts as long as specified in INFO file
-		Get_beep_file("Beep");
+		
+		Get_beep_file("Beep");# beep to alert experimenter
 		s_beep.present();
+		t_pause_1b.set_caption("Dit was blok " + string(runnr) + " van 4.");
+		t_pause_1b.redraw();
 		p_pauze.present();
-		Wait(pause_duration);
+		WaitForButtonpress( button_enter ); # Wait for experimenter to continue
+		
+		# ask calibration
+		t_eyeQuest.set_caption ("Wij drukken [SPATIE] voor oogkalibratie, [ENTER] voor verder.");
+		t_eyeQuest.redraw();
+		p_eyeQuest.present();
+		WaitForEitherButtonpress( button_enter, button_spacebar );
+		
+		# Answer
+		i_response_exp = 0;# "erase" any previous setting
+		response_data response_exp = response_manager.last_response_data();
+		i_response_exp = response_exp.button();
+		
+		if i_response_exp == button_spacebar then 
+			eyeCalib();
+		else# if enter was pressed, the experimenter does not want an eye calibration, [do nothing], move on
+		end;
+		
+		countdown( outputfilename );
 	end;
 	
 end; 
@@ -515,10 +595,16 @@ sub runExp begin
 	Wait(3000); 
 
 	# starting with the first trial
-	iLines = 1; 	
+	iLines = 1;
+	
+	if ispilot then
+		endpoint = 17;
+	else
+		endpoint = iNrTrials;
+	end;
 	
 	# loop through all trials in input file, see subroutine for details
-	loop until iLines > iNrTrials begin 
+	loop until iLines > endpoint begin 
 		RunTrials(); 								
 		iLines = iLines + 1;
 	end;
