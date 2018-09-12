@@ -673,9 +673,9 @@ sub training begin
 		
 	end;
 	
-	# Waits for Enter to go on to the next part (i.e., specifying the input list for the real experiment)
+	# Waits for button press to go on to the next part (i.e., specifying the input list for the real experiment)
 	p_aftertraining.present(); 
-	WaitForButtonpress( button_enter );
+	WaitForButtonpress( button_yes );
 	
 	expStarted = 1;
 
