@@ -32,11 +32,16 @@ string outputfilename;
 string evCode = crossevent.event_code();
 string newEvCode;
 string countStr;
+string pictName;
 
-array <int> xarray [14] =  {0, -496, 496, -496, 496, -496, 0, 496, 0, -248, 248, -248, 248, 0}; 
-array <int> yarray [14] =  {0, 368, 368, -368, -368, 0, 368, 0, -368, 184, 184, -184, -184, 0}; 
-# visual angles are 16 degrees and 8 degrees out horizontally,
-# 12 and 6 degrees vertically.
+array <int> xarray [14] =  {0, -222, 222, -222, 222, -222, 0, 222, 0, -111, 111, -111, 111, 0}; 
+array <int> yarray [14] =  {0, 222, 222, -222, -222, 0, 222, 0, -222, 111, 111, -111, -111, 0}; 
+# visual angles are 7.19 degrees and 3.6 (half of that) out. The visual angle taken by the stimuli is 7.19,
+# so they extend out to 3.6 degrees from centre.
+
+array <int> tgtArray [30];
+tgtArray.fill( 1, 0, 21, 1);# fill it with 21 - 50 (codes for the stimuli)
+array <string> stimulusList[3];
 
 # ---------------------OTHER VARIABLES INITIATION ----------------------------
 
@@ -45,6 +50,7 @@ string sInfo;
 string sListNR;
 string subj_nr;
 string ListInfo;
+string picName;
 
 int contTraining;
 int iLines;
@@ -70,6 +76,7 @@ int count_old_no;
 int i_response_exp;
 int endpoint;
 int divBy;
+int pNum;
 
 array <int> breaktimes[3];
 
