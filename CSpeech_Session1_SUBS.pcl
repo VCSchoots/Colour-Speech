@@ -23,7 +23,7 @@ sub WaitForButtonpress( int button ) begin
    loop count_old = response_manager.total_response_count(button)
    until response_manager.total_response_count(button) > count_old
    begin end;
-   
+	
 end;
 
 #-----------------------------Wait for either of two buttons to be pressed------------------------------------
@@ -245,11 +245,14 @@ begin
 			inputfilename = "Lists\\Practice.txt";
 		end;
 		
-		GetInfo( sInputfileInfo );# ask for the subject code during practice already
+		GetInfo( sInputfileInfo );# ask for the subject code
 		sListNR = sInfo;
 		
 		InputfileHandlingTrain(inputfilename);
-	else
+	else# if expStarted == 1
+		
+		GetInfo( sInputfileInfo );# ask for the subject code
+		sListNR = sInfo;
 		
 		# picking input file, opening inputfile and storing lines of inputfile in an array
 		InputfileHandlingExp();
@@ -264,6 +267,30 @@ begin
 		
 end;
 
+
+############ find the number associated with the current target stimulus picture ############
+sub int findtargetNum( string pName ) begin
+	
+	int pNr = 0;
+	int i=1;
+
+	loop
+	until
+		i > stimuli.count()# or until found, then break
+	begin
+		pictName = stimuli[i].filename();
+		pNr = pictName.find( pName );
+		if pNr >0 then
+			return i;
+			break;
+		end;
+		
+		i=i+1;
+	end;
+	
+	return i;#never executed but code errors if not included
+	
+end;
 
 
 #----------------------------- Get_sound_file (for scenarios with different WAV-files to played to the subject) ------------------------------------
@@ -281,22 +308,23 @@ end;
 #----------------------------- Get_bitmap_file (loads one and the same BMP-file into two different pictures) ------------------------------------
 sub Get_bitmap_file(string bitmap_inpstr) # please notice: loading bitmaps might last up to 100 ms!!!
 begin                
-	b_target.unload();
-	string extension;
+#	b_target.unload();
 
 	# Randomly choose 1 of 3 views of the object, e.g. crocodile1.jpg, but not during training
 	if expStarted == 1 then
 		version = random(1,3);
-		extension = ".jpg";
 	elseif expStarted == 0 then
 		version=1;
-		extension = ".bmp";
 	end;
 	
-	bitmapfilename = "pictures\\" + bitmap_inpstr + string(version) + extension;	
+	picName = bitmap_inpstr + string(version);
+	bitmapfilename = "pictures\\" + bitmap_inpstr + string(version) + "_.jpg";
 	
-	b_target.set_filename ( bitmapfilename );
-	b_target.load();
+	pNum = findtargetNum( picName );
+
+	p_target.set_part( 1, stimuli[pNum] );
+#	b_target.set_filename ( bitmapfilename );
+#	b_target.load();
 end;
 
 
@@ -418,6 +446,10 @@ end;
 
 sub countdown( string sFilename) begin
 	
+	t_countdown.set_caption( "Wachten op de scanner...\n " );
+	t_countdown.redraw();
+	p_countdown.present();
+
 	int mri_pulse_wait = 30;
 	
 	if ispilot then
@@ -432,7 +464,7 @@ sub countdown( string sFilename) begin
 		if (pulse_manager.main_pulse_count() > pulses) then # as soon as another pulse is sent
 			pulses = pulse_manager.main_pulse_count();
 			if pulsecount <= mri_pulse_wait then # as long as the coutner is not at 1 yet
-				t_countdown.set_caption("Wachten op de scanner...\n" + string( mri_pulse_wait+1 - pulsecount) );
+				t_countdown.set_caption( "Wachten op de scanner...\n" + string( mri_pulse_wait+1 - pulsecount) );
 				t_countdown.redraw();
 				p_countdown.present();
 			elseif pulsecount > mri_pulse_wait then #when the counter is at 1, do not flash a 0 before moving on
@@ -455,7 +487,6 @@ sub countdown( string sFilename) begin
    ofile1.close();
 end;
 
-
 ############################ TRIAL #######################   
 
 #-----------------run trial------------------------------------
@@ -463,55 +494,61 @@ end;
 sub RunTrials begin
 	
 	int runnr;# used during break
+	int pCode;# used to define event code of the target stimulus
 		
-	# preloading picture 
+	# selecting picture 
 	if ((iLines) <= iNrTrials) && (target_pict[iLines] != "na") then	
 		Get_bitmap_file(target_pict[iLines] ); # loads the current bitmap 
 	end;
 
 	if (speech[iLines] == "no") && (target_pict[iLines] != "na") then	 	# no speech trial
-	
-		p_target.present();   
-		target_onset_time = clock.time(); # measuring the target onset time always directly after presenting the picture (refresh screen issue)
-		# s_beep.present(); # presenting a beep to be able to recover the target onset time in a parallely recorded WAV-file	
-		WaitFromTo(target_onset_time, target_duration);
-		default.present();
+		
+		# setting the port_code (to eye tracker log) and event_code (presentation .log file)
+		target_event.set_event_code( bitmapfilename );
+		pCode = findtargetNum( picName );
+		target_event.set_port_code( pCode );# the code that is sent to the output port (eyetracker)
 		
 		if expStarted == 1 && ispilot != true then
-			#recording.set_duration(jitter1[iLines]*1000)-security + 2000 + (jitter2[iLines]*1000)-security));
 			recording.set_duration(5000);
 			recording.set_base_filename("Soundfiles\\" + "nospeechtrial_" + sInfo + "_" + ListInfo + "_" + task + "_" +  trial_nr[iLines]  + "_" + target_pict[iLines]);
-			recording.present();
+			recording.present(); # start recording and then immidiately start the trial
 		end;
+		
+		trial_target.present();   
+		target_onset_time = stimulus_manager.last_stimulus_data().time(); # presentation has no way to ask for the time during a trial, so just before, plus average screen refresh is the best we can do in the own logfile.
+		# s_beep.present(); # presenting a beep to be able to recover the target onset time in a parallely recorded WAV-file	
+		#default.present(); # I don't understand why
 		
 		fixation.present(); 	# jitter2 fixation cross 
 		fix2_onset_time = clock.time(); 
 		WaitFromTo(fix2_onset_time, (jitter2[iLines]*1000)-security);  # jitter *1000 because everything's in ms
 		
 	elseif speech[iLines] == "yes" then	 # speech trial
-
-		p_target.present(); # picture presentation
-		target_onset_time = clock.time();
-		#s_beep.present();
+		
+		# setting the port_code (to eye tracker log) and event_code (presentation .log file)
+		target_event.set_event_code( bitmapfilename );
+		pCode = findtargetNum( picName );
+		target_event.set_port_code( pCode );# the code that is sent to the output port (eyetracker)
 		
 		# record answer, not during training
 		if expStarted == 1 && ispilot != true then
-			#recording.set_duration(jitter1[iLines]*1000)-security + 2000 + (jitter2[iLines]*1000)-security));
 			recording.set_duration(5000);
 			recording.set_base_filename("Soundfiles\\" + "speechtrial_" + sInfo + "_" + ListInfo + "_" + task + "_" +  trial_nr[iLines]  + "_" + target_pict[iLines]);
 			recording.present();
 		end;
 		
-		WaitFromTo(target_onset_time, target_duration);
-		default.present();
+		trial_target.present(); # picture presentation
+		target_onset_time = stimulus_manager.last_stimulus_data().time(); # presentation has no way to ask for the time during a trial, so just before, plus average screen refresh is the best we can do in the own logfile.
+		#s_beep.present();
+		
+		#default.present(); # I don't understand why
 		
 		fixation.present(); # jitter1 period
 		fix1_onset_time = clock.time();		
 		WaitFromTo(fix1_onset_time, (jitter1[iLines]*1000)-security);
 		
-		cue.present(); # speech cue period
-		cue_onset_time = clock.time();		
-		WaitFromTo(cue_onset_time, cue_duration);
+		trial_cue.present(); # speech cue period
+		cue_onset_time = stimulus_manager.last_stimulus_data().time();		
 		
 		fixation.present(); 	# jitter2 fixation cross 
 		fix2_onset_time = clock.time(); 
@@ -609,6 +646,8 @@ sub runExp begin
 		iLines = iLines + 1;
 	end;
 	
+	s_beep.present();
+	
 end;
 
 ########################## training ###############################
@@ -631,9 +670,9 @@ sub training begin
 	contTraining = 1;
 	
 	# Present training instructions
-	# Subject or experimenter can press enter to continue
+	# Subject can press button to continue
 	p_instr_training.present(); 
-	WaitForButtonpress( button_enter ); 
+	WaitForButtonpress( button_yes ); 
 	
 	# repeat training until subject chooses to go on to experiment
 	loop until contTraining == 0 begin 
@@ -673,7 +712,7 @@ sub training begin
 		
 	end;
 	
-	# Waits for button press to go on to the next part (i.e., specifying the input list for the real experiment)
+	# Waits for Enter to go on to the next part (i.e., specifying the input list for the real experiment)
 	p_aftertraining.present(); 
 	WaitForButtonpress( button_yes );
 	
