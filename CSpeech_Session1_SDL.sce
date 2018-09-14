@@ -44,15 +44,13 @@ picture { box { height = 3; width = 30; color = 0, 0, 0; } horz_s;
 			 x = 0; y = 0;
 			 box { height = 30; width = 3; color = 0, 0, 0; } vert_s;
 			 x = 0; y = 0;
+			box { height = 3; width = 3; color = 255, 255, 255; } dot_s;
+			x = 0; y = 0; 
 } fixation;  # fixation cross
 
-picture {ellipse_graphic {ellipse_width = 20; ellipse_height = 20; color = 0, 0, 0; rotation = 30;} circle; 
-			x = 0; y = 0;
-} cue; # speech cue
-
-picture { text { caption = " "; } t_info1; x = 0; y = 30;
+picture { text { caption = " "; } t_info1; x = 0; y = 50;
           text { caption = " "; } t_info2; x = 0; y = 0;
-          text { caption = "Druk [ENTER] om door te gaan of [Esc] om te onderbreken. "; } t_info3; x = 0; y = -30;
+          text { caption = "Druk [ENTER] om door te gaan of [Esc] om te onderbreken. "; } t_info3; x = 0; y = -50;
 } p_info; # text
 
 picture { text { caption = "Wachten op de scanner...
@@ -115,7 +113,9 @@ picture { text { caption = "Deel 2: Natuurlijk of Gemaakt
 Nu ga je dezelfde plaatjes bekijken, maar dit keer
 zeg je in jezelf 'Natuurlijk' als het een natuurlijk
 object is, en 'Gemaakt' als het door de mens gemaakt is.
-Als de stip in beeld is moet je hetzelfde hardop zeggen."; } t_instruction_judgement_1; x = 0; y = 0;  
+Als de stip in beeld is moet je hetzelfde hardop zeggen.
+																	
+																(wijsvinger) >"; } t_instruction_judgement_1; x = 0; y = 0;  
 } p_instr_judgement;
 
 picture { text { caption = "PAUZE"; } t_pause_1a; x = 0; y = 30;  
@@ -160,8 +160,8 @@ trial {                             #Show focus point
 			box {height = 30; width = 3; color = 250, 250, 250;}vertical;
 			x=0;y=0;
 		}cross;
-	code = "calibr_cross";
-	port_code = 30; # needs to be there at scanner!! (for proper log file eyetracker)
+		code = "calibr_cross";
+		port_code = 15; # needs to be there at scanner!! (for proper log file eyetracker)
 	} crossevent;
 }eyetrial;
 
@@ -174,17 +174,90 @@ sound { 	wavefile { filename = "WAV-files\\Beep.wav"; preload = true;} w_beep;
 } s_beep;
 
 sound_recording {
-	duration = 4000;
+	duration = 5000;
 	use_date_time = false;
 } recording;
 
-####### visual stimuli ########
+####### array that preloads all the pictures before starting the experiment #########
 
-picture {    bitmap { filename = "Pictures\\empty.bmp"; preload = true; width = 222; height = 222; } b_target;
+array {
+	bitmap { filename = "pictures\\bat1_.jpg"; }bat1;
+	bitmap { filename = "pictures\\box1_.jpg"; }box1;
+	bitmap { filename = "pictures\\cactus1_.jpg"; }cactus1;
+	bitmap { filename = "pictures\\cactus2_.jpg"; }cactus2;
+	bitmap { filename = "pictures\\cactus3_.jpg"; }cactus3;
+	bitmap { filename = "pictures\\carrot1_.jpg"; }carrot1;
+	bitmap { filename = "pictures\\cherry1_.jpg"; }cherry1;
+	bitmap { filename = "pictures\\cherry2_.jpg"; }cherry2;
+	bitmap { filename = "pictures\\cherry3_.jpg"; }cherry3;
+	bitmap { filename = "pictures\\crocodile1_.jpg"; }crocodile1;
+	bitmap { filename = "pictures\\crocodile2_.jpg"; }crocodile2;
+	bitmap { filename = "pictures\\crocodile3_.jpg"; }crocodile3;
+	bitmap { filename = "pictures\\fire_truck1_.jpg"; }fire_truck1;
+	bitmap { filename = "pictures\\fire_truck2_.jpg"; }fire_truck2;
+	bitmap { filename = "pictures\\fire_truck3_.jpg"; }fire_truck3;
+	bitmap { filename = "pictures\\frog1_.jpg"; }frog1;
+	bitmap { filename = "pictures\\frog2_.jpg"; }frog2;
+	bitmap { filename = "pictures\\frog3_.jpg"; }frog3;
+	bitmap { filename = "pictures\\igloo1_.jpg"; }igloo1;
+	bitmap { filename = "pictures\\lobster1_.jpg"; }lobster1;
+	bitmap { filename = "pictures\\lobster2_.jpg"; }lobster2;
+	bitmap { filename = "pictures\\lobster3_.jpg"; }lobster3;
+	bitmap { filename = "pictures\\mouse1_.jpg"; }mouse1;
+	bitmap { filename = "pictures\\pineapple1_.jpg"; }pineapple1;
+	bitmap { filename = "pictures\\snowman1_.jpg"; }snowman1;
+	bitmap { filename = "pictures\\strawberry1_.jpg"; }strawberry1;
+	bitmap { filename = "pictures\\strawberry2_.jpg"; }strawberry2;
+	bitmap { filename = "pictures\\strawberry3_.jpg"; }strawberry3;
+	bitmap { filename = "pictures\\swan1_.jpg"; }swan1;
+	bitmap { filename = "pictures\\tank1_.jpg"; }tank1;
+	bitmap { filename = "pictures\\tank2_.jpg"; }tank2;
+	bitmap { filename = "pictures\\tank3_.jpg"; }tank3;
+	bitmap { filename = "pictures\\tomato1_.jpg"; }tomato1;
+	bitmap { filename = "pictures\\tomato2_.jpg"; }tomato2;
+	bitmap { filename = "pictures\\tomato3_.jpg"; }tomato3;
+	bitmap { filename = "pictures\\tooth1_.jpg"; }tooth1;
+	bitmap { filename = "pictures\\turtle1_.jpg"; }turtle1;
+	bitmap { filename = "pictures\\turtle2_.jpg"; }turtle2;
+	bitmap { filename = "pictures\\turtle3_.jpg"; }turtle3;
+} stimuli; 
+
+####### visual stimuli trials ########
+
+picture {    bitmap { filename = "Pictures\\empty.bmp"; preload = true; } b_target; #width = 222; height = 222; } b_target;
 	x = 0; y = 0;
 	box { height = 3; width = 30; color = 0, 0, 0; } horz_s_pic;
 	x = 0; y = 0;
 	box { height = 30; width = 3; color = 0, 0, 0; } vert_s_pic;
 	x = 0; y = 0; 
+	box { height = 3; width = 3; color = 255, 255, 255; } dot_s_pic;
+	x = 0; y = 0; 
 } p_target; 
 
+trial {
+	trial_duration = stimuli_length;
+	
+	stimulus_event {
+		picture p_target;
+		code = "target";
+		port_code = 20; # needs to be there at scanner!! (for proper log file eyetracker)
+		time = 0;
+		duration = 490;# 500 ms minus security
+	}target_event;
+}trial_target;
+
+picture {ellipse_graphic {ellipse_width = 20; ellipse_height = 20; color = 0, 0, 0; rotation = 30;} circle; 
+			x = 0; y = 0;
+} cue; # speech cue
+
+trial {
+	trial_duration = stimuli_length;
+	
+	stimulus_event {
+		picture cue;
+		code = "speech_cue";
+		port_code = 60;
+		time = 0;
+		duration = 1990;# 2000 ms minus security
+	}cue_event;
+}trial_cue;
