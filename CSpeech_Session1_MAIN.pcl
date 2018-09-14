@@ -8,7 +8,6 @@ include "CSpeech_Session1_SUBS.pcl";		# Include all the subroutines.
 # Loop until the clock is no longer negative.
 loop until clock.time() >= 0 begin end; 	
 
-
 # Present welcome screen, continue with index finger
 p_welcome.present();		 
 WaitForButtonpress( button_yes );
@@ -23,7 +22,7 @@ default.present();
 task = "objectnaming"; 
 default.present(); # present a blank screen 
 
-# Present instruction screen for object naming, continue with enter
+# Present instruction screen for object naming, continue with index finger
 p_instr_naming.present();		 
 WaitForButtonpress( button_yes );
 
@@ -31,7 +30,7 @@ training();
 default.present(); # present a blank screen 
 
 # Enter input file for the session, e.g. "sub_01"
-OpenInputFile("What's the subject code (e.g., sub_01)?");
+OpenInputFile("Subject code (b.v. sub_01)?");
  
 # Prepare logfile
 WriteHeader( outputfilename );	                         
@@ -62,6 +61,9 @@ OpenInputFile("What's the subject code (e.g., sub_01)?");
 # Prepare logfile
 WriteHeader( outputfilename );	                         
 default.present(); # present a blank screen 
+
+# Wait for the scanner to collect 30 weighting volumes, present counter to participant and log first pulse time to logfile.
+countdown( outputfilename);
 
 # Run trials, save to log file (see subroutine)
 runExp();
