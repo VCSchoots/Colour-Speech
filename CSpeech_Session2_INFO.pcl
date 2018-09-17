@@ -3,6 +3,7 @@
 int button_enter    = 1;  # ENTER-button for experimenter and subject
 int button_yes    = 2;  # yes button for subject
 int button_no    = 3;  # no button for subject
+int button_spacebar = 4;# SPACEBAR-button for experimenter
 
 # -------------------------- LOGFILE -----------------------------
 
@@ -26,6 +27,22 @@ string outputfilename;
 
 #output_port oport = output_port_manager.get_port( 1 );   # handling the port for sending triggers for EEG
 
+# ------------- EYETRACKER CALIBRATION VARIABLES INITIATION ------------------
+
+string evCode = crossevent.event_code();
+string newEvCode;
+string countStr;
+string pictName;
+
+array <int> xarray [14] =  {0, -222, 222, -222, 222, -222, 0, 222, 0, -111, 111, -111, 111, 0}; 
+array <int> yarray [14] =  {0, 222, 222, -222, -222, 0, 222, 0, -222, 111, 111, -111, -111, 0}; 
+# visual angles are 7.19 degrees and 3.6 (half of that) out. The visual angle taken by the stimuli is 7.19,
+# so they extend out to 3.6 degrees from centre.
+
+array <int> tgtArray [30];
+tgtArray.fill( 1, 0, 21, 1);# fill it with 21 - 50 (codes for the stimuli)
+array <string> stimulusList[3];
+
 # ---------------------OTHER VARIABLES INITIATION ----------------------------
 
 string sHeader;
@@ -33,11 +50,13 @@ string sInfo;
 string sListNR;
 string subj_nr;
 string ListInfo;
+string picName;
 
 int contTraining;
 int iLines;
 int iNrTrials;
 int count_old;
+int count_old2;
 int count_old_continue_button;
 int count_stim;
 int dur_wait;
@@ -54,6 +73,12 @@ int version;
 int expStarted;
 int count_old_yes;
 int count_old_no;
+int i_response_exp;
+int endpoint;
+int divBy;
+int pNum;
+
+array <int> breaktimes[3];
 
 # --------------------- INPUT FILE VARIABLES INITIATION ----------------------------;
 
@@ -62,6 +87,7 @@ int NR_COLUMNS = 10;   # Max number of columns in input file is 10, change if yo
                           
 array <string> inputlines[NR_TRIALS];             
 array <string> fields[NR_COLUMNS]; 
+array <string> inputfields[NR_COLUMNS];
 array <string> filenamefields[10];  
 array <string> pathfields[2];               
 array <string> trial_nr[NR_TRIALS];             		# training or filler or experimental or null trial
@@ -84,7 +110,5 @@ int end_loop_time;
 #string list;
 
 # --------------------- EXPERIMENT VARIABLES INITIATION ----------------------------;
-int security = 10;                         # we subtract the security of 15ms from every desired duration to be sure to be in the time frame we want (--> refresh rate issue)
-int target_duration   = 500 - security;   # the time the target picture will be presented
-int cue_duration   = 2000 - security;   # the time the target picture will be presented
+int security = 10;                         # we subtract the security from every desired duration to be sure to be in the time frame we want (--> refresh rate issue)
 int pause_duration     = 120000 - security; # 2 minute break
