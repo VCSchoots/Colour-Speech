@@ -111,6 +111,4 @@ int end_loop_time;
 
 # --------------------- EXPERIMENT VARIABLES INITIATION ----------------------------;
 int security = 10;                         # we subtract the security of 15ms from every desired duration to be sure to be in the time frame we want (--> refresh rate issue)
-int target_duration   = 500 - security;   # the time the target picture will be presented
-int cue_duration   = 2000 - security;   # the time the target picture will be presented
 int pause_duration     = 120000 - security; # 2 minute break
