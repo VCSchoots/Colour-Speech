@@ -1,55 +1,56 @@
 ########### SESSION 1 ###########
 
 ########### initiation ###########
+bool ispilot = true; # set to FALSE when real deal begins. Makes sure testing is quicker.
 
-include "CSpeech_Session2_INFO.pcl";		# Include all the variables.
-include "CSpeech_Session2_SUBS.pcl";		# Include all the subroutines.
+include "CSpeech_Session1_INFO.pcl";		# Include all the variables.
+include "CSpeech_Session1_SUBS.pcl";		# Include all the subroutines.
 # Loop until the clock is no longer negative.
 loop until clock.time() >= 0 begin end; 	
 
-########### welcome ###########
+# Present welcome screen, continue with index finger
+p_welcome.present();		 
+WaitForButtonpress( button_yes );
+
+########### during localiser scans, start with eye calibration ############
+eyeCalib();
 
 # present a blank screen 
 default.present(); 
-
-# Present welcome screen, continue with enter
-p_welcome.present();		 
-WaitForButtonpress( button_enter );
 
 ########### object naming part ###########
 task = "objectnaming"; 
 default.present(); # present a blank screen 
 
-# Present instruction screen for object naming, continue with enter
+# Present instruction screen for object naming, continue with index finger
 p_instr_naming.present();		 
-WaitForButtonpress( button_enter );
+WaitForButtonpress( button_yes );
 
 training();
 default.present(); # present a blank screen 
 
 # Enter input file for the session, e.g. "sub_01"
-OpenInputFile("What's the subject code (e.g., sub_01)?"); 
-     
+OpenInputFile("Subject code (b.v. sub_01)?");
+ 
 # Prepare logfile
 WriteHeader( outputfilename );	                         
-default.present(); # present a blank screen 
+default.present(); # present a blank screen
 
-# Present instruction screen for object naming again, delete if unwanted
-p_instr_naming.present();		 
-WaitForButtonpress( button_enter );
+# Wait for the scanner to collect 30 weighting volumes, present counter to participant and log first pulse time to logfile.
+countdown( outputfilename);
 
 # Run trials, save to log file (see subroutine)
 runExp();
 
 p_end_part1.present();
-WaitForButtonpress( button_enter );
+WaitForButtonpress( button_yes );
 
 ########### semantic judgement part ###########
 task = "colournaming"; 
 
 # Present instruction screen for semantic judgement, continue with enter
-p_instr_colnaming.present();		 
-WaitForButtonpress( button_enter );
+p_instr_judgement.present();		 
+WaitForButtonpress( button_yes );
 
 training();
 default.present(); # present a blank screen 
@@ -61,14 +62,15 @@ OpenInputFile("What's the subject code (e.g., sub_01)?");
 WriteHeader( outputfilename );	                         
 default.present(); # present a blank screen 
 
-# Present instruction screen for semantic judgement, delete if unwanted
-p_instr_colnaming.present();		 
-WaitForButtonpress( button_enter );
+# Wait for the scanner to collect 30 weighting volumes, present counter to participant and log first pulse time to logfile.
+countdown( outputfilename);
 
 # Run trials, save to log file (see subroutine)
 runExp();
 
 ########### the end ###########
-     
 EndFinalScreen();
+
+########### after experiment, one more eyetracker calibration #############
+eyeCalib();
 
