@@ -242,7 +242,7 @@ trial {
 		code = "target";
 		port_code = 20; # needs to be there at scanner!! (for proper log file eyetracker)
 		time = 0;
-		duration = 490;# 500 ms minus security
+		duration = 690;# 700 ms minus security (hard coded because SDL has to precede PCL)
 	}target_event;
 }trial_target;
 
