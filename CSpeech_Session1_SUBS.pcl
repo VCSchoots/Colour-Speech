@@ -222,8 +222,21 @@ begin
 		color[iLines] = fields[2];					# r(ed) or g(reen)
 		target_pict[iLines]     = fields[3];		# picture in BMP format (filename without extension)
 		speech[iLines]	= fields[4];		# yes or no
-		jitter1[iLines] = double(fields[5]);				# duration jitter 1
-		jitter2[iLines] = double(fields[6]);				# duration jitter 2
+		
+		### We decided to prolong the duration of the stimulus by 200ms at a late stage.
+		### In order to accomodate that, we are shortening the duration of whichever jitter
+		### comes after, by 200 ms as well.
+		
+		if jitter1[iLines] == 0.0 then#speech trial
+			jitter1[iLines] = double(fields[5]);				# duration jitter 1
+			jitter2[iLines] = double(fields[6]) - 0.2;		# duration jitter 2
+		elseif jitter1[iLines] > 0.0 then#non-speech trial
+			jitter1[iLines] = double(fields[5]) - 0.2;		# duration jitter 1
+			jitter2[iLines] = double(fields[6]);				# duration jitter 2
+		else
+			exit("Input file has something other than a duration in 'jitter1' field.");# this should throw an error
+		end;
+		
 		jitter3[iLines] = double(fields[7]);				# duration jitter 3	
 		trial_count[iLines] = int(fields[8]);				# trial count without null trials		
 		iLines = iLines + 1;
