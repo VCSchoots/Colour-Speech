@@ -227,10 +227,10 @@ begin
 		### In order to accomodate that, we are shortening the duration of whichever jitter
 		### comes after, by 200 ms as well.
 		
-		if jitter1[iLines] == 0.0 then#speech trial
+		if double(fields[5]) == 0.0 then#speech trial
 			jitter1[iLines] = double(fields[5]);				# duration jitter 1
 			jitter2[iLines] = double(fields[6]) - 0.2;		# duration jitter 2
-		elseif jitter1[iLines] > 0.0 then#non-speech trial
+		elseif double(fields[5]) > 0.0 then#non-speech trial
 			jitter1[iLines] = double(fields[5]) - 0.2;		# duration jitter 1
 			jitter2[iLines] = double(fields[6]);				# duration jitter 2
 		else
