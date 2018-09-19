@@ -1,0 +1,137 @@
+############ getIsoluminanceValues SUBS #################
+
+#-------------Get Info--------------------------
+# this is the subroutine to ask interactively for any information we want
+sub string GetInfo ( string sInputstr )
+begin
+	string sInfo;
+	t_info1.set_caption ( sInputstr );
+	t_info1.redraw();
+	t_info2.set_caption ( " " );
+	t_info2.redraw();
+	
+	p_info.present();
+	
+	system_keyboard.set_case_mode( 3 );                    # Capital letters also possible
+	sInfo = system_keyboard.get_input( p_info, t_info2 ); # Using backspace key possible
+	return sInfo;
+end;
+
+#-----------------------------Wait for a certain button to be pressed------------------------------------
+sub WaitForButtonpress( int button ) begin
+	 
+   loop
+		int count_old = response_manager.total_response_count(button)
+   until response_manager.total_response_count(button) > count_old
+   begin end;
+	
+end;
+
+#-------------CircleColours--------------------------
+# this is our subroutine to calculate the colour inputs necessary to make a [colour]/grey stimulus
+sub array < double,1 > CircleColours ( array< double,1 >& colour, array< double,1 >& background)
+begin
+	array<double> CLR[6];# Array to be filled with {red background, red amplitude, g backgr, g amp, b backgr, b amp}
+	CLR[1] = (colour[1] + background[1])/ 2.0;# red channel background (difference between brightest and darkest halved)
+	CLR[2] = (colour[1] - background[1])/ 2.0;# red channel amplitude (average of brightest and darkest)
+	CLR[3] = (colour[2] + background[2])/ 2.0;# green backgr (same thing, but inverted so that the period is inverse to that of the red channel)
+	CLR[4] = (colour[2] - background[2])/ 2.0;# green amp
+	CLR[5] = (colour[3] + background[3])/ 2.0;# blue
+	CLR[6] = (colour[3] - background[3])/ 2.0;# blue
+	return CLR
+end;
+
+### MAIN LOOP ###
+
+sub array < double,1 > flickertrial(vsg::graphic_generator graph_gen2, array< double,1 >& clr, array< double,1 >& bkg) begin
+	
+	array<double> OUT[3];# Array to be filled with {red, green, blue} value for the luminance matched colour
+	
+	pic1.set_background_color(int(bkg[1]),int(bkg[2]),int(bkg[3]));# background is shown in between circles
+	
+	# calculate the necessary background and amplitude numbers for the sine waves used in stimulus generation
+	array<double> BC[] = CircleColours ( clr, bkg );# BC for 'background+colour', array to be filled with {red background, red amplitude, g backgr, g amp, b backgr, b amp}
+	
+	graph_gen2.set_colors( BC[1], BC[2], BC[3], BC[4], BC[5], BC[6] );# coloured circle on a grey background
+	graphic_surface surface = graph_gen2.create();
+	
+	# check if green or red
+	int rgb;
+	if clr[2] > clr[1] then# assuming green
+		rgb = 2;
+	elseif clr[1] > clr[2] then# assuming red
+		rgb = 1;
+	end;
+	
+loop
+   int i = 1;
+	int j = 1;
+until
+   i > 180*15 # X*15 gives X seconds of flickers (or until ENTER is pressed)
+begin
+	
+	j = j+1;
+	if j==3 then j = 1; end;# odd/even alternating
+	
+	if j==1 then
+		pic1.set_part( 1, surface );
+	elseif j==2 then
+		pic1.set_part( 1, dummy);
+	end;
+	
+	trial1.present();
+	
+	if response_manager.response_count() > 0 then# if there was any button press during this trial
+		if response_manager.last_response() == button_BRIGHTER then# right index
+			
+			clr[rgb] = clr[rgb] + 10;# adust colour intensity up
+			graph_gen2.set_colors( 0.5*(clr[1]+bkg[1]), 0.5*(clr[1]-bkg[1]), 0.5*(clr[2]+bkg[2]), 0.5*(clr[2]-bkg[2]), 0.5*(clr[3]+bkg[3]), 0.5*(clr[3]-bkg[3]) );# colour circle on a grey background
+			surface = graph_gen2.create();
+			
+		elseif response_manager.last_response() == button_brighter then# right middle
+			
+			clr[rgb] = clr[rgb] + 1;# up
+			graph_gen2.set_colors( 0.5*(clr[1]+bkg[1]), 0.5*(clr[1]-bkg[1]), 0.5*(clr[2]+bkg[2]), 0.5*(clr[2]-bkg[2]), 0.5*(clr[3]+bkg[3]), 0.5*(clr[3]-bkg[3]) );# colour circle on a grey background
+			surface = graph_gen2.create();
+			
+		elseif response_manager.last_response() == button_darker then# down
+			
+			clr[rgb] = clr[rgb] - 1;# down
+			graph_gen2.set_colors( 0.5*(clr[1]+bkg[1]), 0.5*(clr[1]-bkg[1]), 0.5*(clr[2]+bkg[2]), 0.5*(clr[2]-bkg[2]), 0.5*(clr[3]+bkg[3]), 0.5*(clr[3]-bkg[3]) );# colour circle on a grey background
+			surface = graph_gen2.create();
+			
+		elseif response_manager.last_response() == button_DARKER then# right little finger
+			
+			clr[rgb] = clr[rgb] - 10;# down
+			graph_gen2.set_colors( 0.5*(clr[1]+bkg[1]), 0.5*(clr[1]-bkg[1]), 0.5*(clr[2]+bkg[2]), 0.5*(clr[2]-bkg[2]), 0.5*(clr[3]+bkg[3]), 0.5*(clr[3]-bkg[3]) );# colour circle on a grey background
+			surface = graph_gen2.create();
+			
+		elseif response_manager.last_response() == button_confirm then# left index
+			break;
+		end;
+	end;
+	
+   i = i + 1
+end;
+
+return clr;
+
+end;# of sub flickertrial
+
+
+#----------------outputFileWrite------------------------
+
+sub outputFileWrite ( output_file outfile1 , string sInfo, array< double,1 >& g1, array< double,1 >& r1, array< double,1 >& g2, array< double,1 >& r2)  begin
+	string outputfilename = sInfo + "_eqLum.txt";
+	outfile1.open_append( outputfilename );# if file exists, do not overwrite but append
+	outfile1.print_line( "brightGreenR\tbrightGreenG\tbrightGreenB" );
+	outfile1.print_line( string(g1[1]) + "\t" + string(g1[2]) + "\t" + string(g1[3]) );
+	outfile1.print_line( "brightRedR\tbrightRedG\tbrightRedB" );
+	outfile1.print_line( string(r1[1]) + "\t" + string(r1[2]) + "\t" + string(r1[3]) );
+	outfile1.print_line( "darkGreenR\tdarkGreenG\tdarkGreenB" );
+	outfile1.print_line( string(g2[1]) + "\t" + string(g2[2]) + "\t" + string(g2[3]) );
+	outfile1.print_line( "darkRedR\tdarkRedG\tdarkRedB" );
+	outfile1.print_line( string(r2[1]) + "\t" + string(r2[2]) + "\t" + string(r2[3]) );
+	
+	outfile1.close();
+end
