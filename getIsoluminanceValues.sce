@@ -127,7 +127,6 @@ graph_gen2.add_transformation( ellipsegen, vsg::combine_none );
 p_welcome.present();
 WaitForButtonpress( button_confirm );
 
-
 ####################### MAIN LOOP #########################
 
 array<double> bg1[3] = flickertrial( graph_gen2, brightgreen, brightbackground);# run luminance matching trial and collect end value
