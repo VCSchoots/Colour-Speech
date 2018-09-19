@@ -54,24 +54,37 @@ sub Get_subj_info(string inpstr1) begin
 
 end;
 
+#-------------CircleColours--------------------------
+# this is our subroutine to calculate the colour inputs necessary to make a [colour]/grey stimulus
+sub array < double,1 > CircleColours ( array< double,1 >& clr, array< double,1 >& bkg)
+begin
+	array<double> CLR[6];# Array to be filled with {red background, red amplitude, g backgr, g amp, b backgr, b amp}
+	CLR[1] = (clr[1] + bkg[1])/ 2.0;# red channel background (difference between brightest and darkest halved)
+	CLR[2] = (clr[1] - bkg[1])/ 2.0;# red channel amplitude (average of brightest and darkest)
+	CLR[3] = (clr[2] + bkg[2])/ 2.0;# green backgr (same thing, but inverted so that the period is inverse to that of the red channel)
+	CLR[4] = (clr[2] - bkg[2])/ 2.0;# green amp
+	CLR[5] = (clr[3] + bkg[3])/ 2.0;# blue
+	CLR[6] = (clr[3] - bkg[3])/ 2.0;# blue
+	return CLR
+end;
+
 #----------------------------- Concentric circles ------------------------------------
-
-sub redlight begin
+sub conCirc( array< graphic_surface, 1 > surfaces ) begin
 	loop int j = 1 until j == 3 begin # Do this twice
 		if direction == 1 then
-			# putting the red inward circles in the picture and presenting them
-			loop int i = 1 until i > redsurfaces.count()
+			# putting the inward circles in the picture and presenting them
+			loop int i = 1 until i > surfaces.count()
 			begin
-				pic.set_part( 1, redsurfaces[i] );
+				pic.set_part( 1, surfaces[i] );
 				trial1.present();
 				wait_interval(20);
 				i = i + 1;
 			end;
 		elseif direction == 2 then	
-			# putting the red outward circles in the picture and presenting them
-			loop int i = 1 until i > redsurfaces.count()
+			# putting the outward circles in the picture and presenting them
+			loop int i = 1 until i > surfaces.count()
 			begin
-				pic.set_part( 1, redsurfaces[redsurfaces.count()+1 - i] );
+				pic.set_part( 1, surfaces[surfaces.count()+1 - i] );
 				trial1.present();
 				wait_interval(20);
 				i = i + 1;
@@ -81,112 +94,117 @@ sub redlight begin
 	end;
 end;
 
-sub greenlight begin
-	loop int j = 1 until j == 3 begin # Do this twice
-		if direction == 1 then
-			# putting the green inward circles in the picture and presenting them
-			loop int i = 1 until i > greensurfaces.count()
-			begin
-				pic.set_part( 1, greensurfaces[i] );
-				trial1.present();
-				wait_interval(20);
-				i = i + 1;
-			end;
-		elseif direction == 2 then
-			# putting the green outward circles in the picture and presenting them
-			loop int i = 1 until i > greensurfaces.count()
-			begin
-				pic.set_part( 1, greensurfaces[greensurfaces.count()+1 - i] );
-				trial1.present();
-				wait_interval(20);
-				i = i + 1;
-			end;
-		end;
-	j = j + 1;	
+############################ Input File ####################
+
+sub 
+	array< double,2 > InputfileHandling ( string sFilename )
+begin
+	array<string> inputlines[0]; 
+	# inputfile opening and storing of contents in separate lines
+	InputFile.open ( "Logfiles\\" + sFilename + "_eqLum.txt");
+	InputFile.set_delimiter ( '\n' );
+
+	iLines = 0;
+	
+	loop
+	until InputFile.end_of_file() || !InputFile.last_succeeded()
+	begin
+		iLines = iLines + 1;
+		inputlines.add( InputFile.get_line() );
 	end;
+
+	if !InputFile.last_succeeded() then
+		term.print("Error while reading!\n" );
+	elseif !InputFile.end_of_file() then
+		term.print("Exceeding capacity!\n"  );
+	end;
+
+	InputFile.close();
+	
+	# take only the info from the last 8 lines in case there were earlier participants written to this file
+	array<string> colourStrings[0];
+	colourStrings.add(inputlines[iLines-6]);#bright green
+	colourStrings.add(inputlines[iLines-4]);#bright red
+	colourStrings.add(inputlines[iLines-2]);#dark green
+	colourStrings.add(inputlines[iLines]);#dark red
+	
+	array<string> bgstring[3];
+	array<string> brstring[3];
+	array<string> dgstring[3];
+	array<string> drstring[3];
+	
+	colourStrings[1].split( "\t", bgstring );
+	colourStrings[2].split( "\t", brstring );
+	colourStrings[3].split( "\t", dgstring );
+	colourStrings[4].split( "\t", drstring );
+	
+	array<double> colourValues[4][3];
+	colourValues[1][1] = double( bgstring[1] );
+	colourValues[1][2] = double( bgstring[2] );
+	colourValues[1][3] = double( bgstring[3] );
+	colourValues[2][1] = double( brstring[1] );
+	colourValues[2][2] = double( brstring[2] );
+	colourValues[2][3] = double( brstring[3] );
+	colourValues[3][1] = double( dgstring[1] );
+	colourValues[3][2] = double( dgstring[2] );
+	colourValues[3][3] = double( dgstring[3] );
+	colourValues[4][1] = double( drstring[1] );
+	colourValues[4][2] = double( drstring[2] );
+	colourValues[4][3] = double( drstring[3] );
+	return colourValues;
+
 end;
 
-sub reddark begin
-	loop int j = 1 until j == 3 begin # Do this twice
-		if direction == 1 then
-			# putting the red inward circles in the picture and presenting them
-			loop int i = 1 until i > redsurfaces.count()
-			begin
-				pic.set_part( 1, redsurfaces[i] );
-				trial1.present();
-				wait_interval(20);
-				i = i + 1;
-			end;
-		elseif direction == 2 then	
-			# putting the red outward circles in the picture and presenting them
-			loop int i = 1 until i > redsurfaces.count()
-			begin
-				pic.set_part( 1, redsurfaces[redsurfaces.count()+1 - i] );
-				trial1.present();
-				wait_interval(20);
-				i = i + 1;
-			end;
-		end;
-	j = j + 1;	
+############################ Scanner countdown #######################   
+
+# present a countdown screen and print the time of the 31st scan trigger to Log file
+
+sub countdown( string sFilename) begin
+	
+	
+	t_countdown.set_caption( "Wachten op de scanner...\n " );
+	t_countdown.redraw();
+	p_countdown.present();
+
+	int mri_pulse_wait = 30;
+	
+	if ispilot then
+		mri_pulse_wait = 2; # number of MRI pulses to wait
 	end;
-end;
-
-sub greendark begin
-	loop int j = 1 until j == 3 begin # Do this twice
-		if direction == 1 then
-			# putting the green inward circles in the picture and presenting them
-			loop int i = 1 until i > greensurfaces.count()
-			begin
-				pic.set_part( 1, greensurfaces[i] );
-				trial1.present();
-				wait_interval(20);
-				i = i + 1;
-			end;
-		elseif direction == 2 then
-			# putting the green outward circles in the picture and presenting them
-			loop int i = 1 until i > greensurfaces.count()
-			begin
-				pic.set_part( 1, greensurfaces[greensurfaces.count()+1 - i] );
-				trial1.present();
-				wait_interval(20);
-				i = i + 1;
-			end;
-		end;
-	j = j + 1;	
-	end;
-end;
-
-############################ LOGFILE #######################   
-
-#----------------------------------------------------------------------------------------------------------
-sub writeFirstPulse begin 
-#  Writing the first pulse time to the log file
-	int mri_pulse_wait = 2; # number of MRI pulses to wait
 	
 	int pulses = pulse_manager.main_pulse_count();
 	
 	loop
-		int i=1
-	until
-		i > mri_pulse_wait
-	begin
-		if (pulse_manager.main_pulse_count() > pulses) then
-			pulses = pulse_manager.main_pulse_count();   
-			int time = pulse_manager.main_pulse_time( pulses );
-			
-/*			text_1.set_caption(string(mri_pulse_wait - i));
-			text_1.set_font_size(48);
-			text_1.redraw();
-			trial_text.set_duration(500);
-			trial_text.present();
-*/			
-			i=i+1;
+		int pulsecount = 1;
+	until pulsecount > mri_pulse_wait+1 begin # +1 because it breaks out of the loop as soon as the last number is on screen
+		if (pulse_manager.main_pulse_count() > pulses) then # as soon as another pulse is sent
+			pulses = pulse_manager.main_pulse_count();
+			if pulsecount <= mri_pulse_wait then # as long as the coutner is not at 1 yet
+				t_countdown.set_caption("Wachten op de scanner...\n" + string( mri_pulse_wait+1 - pulsecount) );
+				t_countdown.redraw();
+				p_countdown.present();
+			elseif pulsecount > mri_pulse_wait then #when the counter is at 1, do not flash a 0 before moving on
+			end;
+			pulsecount = pulsecount + 1;
 		end;
 	end;
 	
-	ofile1.print("StartTime (after " + 
-	string(mri_pulse_wait) + ". scanner pulse) = \t" + string(clock.time()) + "\n");        	# log start time after MRI pulse
+	int time = pulse_manager.main_pulse_time( pulses );
+	
+   string sOutputLine = "";
+
+	sOutputLine.append(sListNR + "\t");     #write participant nr followed by a tab
+	sOutputLine.append("FirstVolume\t");     #write first volume followed by 8 tabs
+	sOutputLine.append("\t\t\t\t\t\t\t");
+	sOutputLine.append(string( time ) + "\t\t\n");#write the clock time directly after the 31st pulse, two empty fields and a return
+	
+   ofile1.open_append( sFilename );      # don't overwrite file, if it already exists, but open to append!
+	ofile1.print(sOutputLine);        	# log start time after MRI pulse
+   ofile1.close();
 end;
+
+
+############################ LOGFILE #######################   
 
 #----------------------------------------------------------------------------------------------------------
 sub WriteHeader ( string sFilename) 
@@ -219,7 +237,6 @@ begin
 	sOutputLine.append("\n");
 
    ofile1.open_append( sFilename );      # don't overwrite file, if it already exists, but open to append!
-   writeFirstPulse();						  # noting the time of the pulse that precedes the experiment
    ofile1.print( sOutputLine );          # create header of output file
    ofile1.close();
    ofile1.close();
@@ -299,13 +316,13 @@ sub showMiniBlock begin
 		direction = random(1,2);	# direction picked randomly, like B&H
 		
 		if miniblock == "greenlight" then
-			greenlight();
+			conCirc( brightgreensurfaces );
 		elseif miniblock == "redlight" then	
-			redlight();
+			conCirc( brightredsurfaces );
 		elseif miniblock == "greendark" then	
-			greendark();			
+			conCirc( darkgreensurfaces );			
 		elseif miniblock == "reddark" then	
-			reddark();
+			conCirc( darkredsurfaces );
 		end;
 		
 		circle_end_time = clock.time();
@@ -347,7 +364,16 @@ end;
 sub showBlock begin
 	# present 32 miniblocks [8*4 miniblock types]
 	
-	loop int j = 1 until j > 8 
+	int numBlock;
+	int numMiniBlock;
+	
+	if ispilot then
+		numBlock = 1;
+	else
+		numBlock = 8;
+	end;
+	
+	loop int j = 1 until j > numBlock 
 	begin
 	
 		miniblocks.shuffle();
@@ -356,7 +382,13 @@ sub showBlock begin
 			miniblocks.shuffle();
 		end;
 		
-		loop int i = 1 until i > miniblocks.count()
+		if ispilot then
+			numMiniBlock = 1;
+		else
+			numMiniBlock = miniblocks.count();
+		end;
+		
+		loop int i = 1 until i > numMiniBlock
 		begin
 			miniblock = miniblocks[i];
 	
@@ -373,22 +405,49 @@ sub showBlock begin
 	end;
 end;
 
+################# training sub #################
 sub training begin
+	
+	bool contTraining = true;
 	
 	TrialType = "T";
 	
-	# Ask if training should be continued
+	# Training instructions
 	p_training.present(); 
-	WaitForButtonpress( button_enter );
+	WaitForButtonpress( button_yes );
 	
+	
+	# repeat training until subject chooses to go on to experiment
+	loop until contTraining == false begin
+
+	# actual training block
 	miniblock = "greenlight";
 	showMiniBlock();
+	miniblock = "reddark";
+	showMiniBlock();
 	
-	TrialType = "E";
+		# Ask if training should be continued
+		p_trainingCont.present(); 
+		
+		# Loop to determine answer (yes or no)
+		count_old_yes = response_manager.total_response_count(button_yes);
+		count_old_no = response_manager.total_response_count(button_no);
+		
+		loop until response_manager.total_response_count(button_yes) > count_old_yes || response_manager.total_response_count(button_no) > count_old_no
+		begin
+			if response_manager.total_response_count(button_yes) > count_old_yes then
+				contTraining = true;
+			elseif response_manager.total_response_count(button_no) > count_old_no then
+				contTraining = false;
+			end;	
+		end;
+	end;	
+
 	
 	p_training_end.present(); 		
-	WaitForButtonpress( button_enter );
-	
+	WaitForButtonpress( button_enter );# wait for experimenter to continue
+	TrialType = "E";# from now on the rials are Experiment trials, and should be written to log.
+
 end;
 
 #######################final screen############################                                                       
