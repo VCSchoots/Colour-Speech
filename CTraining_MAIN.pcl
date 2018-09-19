@@ -2,8 +2,13 @@
 
 ########### initiation ###########
 
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+bool ispilot = false;# set to true during code testing, SET TO FALSE AT THE SCANNER!!!
+#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 include "CTraining_INFO.pcl";		# Include all the variables.
 include "CTraining_SUBS.pcl";		# Include all the subroutines.
+
 # Loop until the clock is no longer negative.
 loop until clock.time() >= 0 begin end; 	
 
@@ -14,20 +19,68 @@ default.present();
 
 # Present welcome screen, continue with enter
 p_welcome.present();		 
-WaitForButtonpress( button_enter );
+WaitForButtonpress( button_yes );
 
-# Prepare logfile
+############# Read input file, Prepare logfile, set colours #############################
 Get_subj_info("Please enter subject code, e.g. sub_01.");
+
+array<double> colourValues[4][3] = InputfileHandling ( SubjID );
+
+brightgreen = colourValues[1];
+brightred = colourValues[2];
+darkgreen = colourValues[3];
+darkred = colourValues[4];
+
 outputfilename = SubjID + "-log.txt";
-WriteHeader( outputfilename );	               
+WriteHeader( outputfilename );
+
+# calculate the necessary background and amplitude numbers for the sine waves used in stimulus generation
+array<double> BG[6] = CircleColours( brightgreen, background );# BG for 'Bright Green', array to be filled with {red background, red amplitude, g backgr, g amp, b backgr, b amp}
+array<double> BR[6] = CircleColours( brightred, background );# BR for 'Bright Red'
+array<double> DG[6] = CircleColours( darkgreen, background );# DG for 'Dark Green'
+array<double> DR[6] = CircleColours( darkred, background );# DR for 'Dark Red'
+array<double> GB[6] = CircleColours( black , background );# GB for 'Grey/Black', used in the mask
+
+# making an array of graphic surfaces with bright green-and-grey circles moving inward on each iteration
+vsg::circular_generator circlegen = new vsg::circular_generator( 1.0, 0.0, false );# the sinusoid circles are generated, perodicity in half deg. visual angle PER CYCLE, so 1.0 is 0.5 cycles per degree. I know. Weird.
+vsg::graphic_generator graph_gen = new vsg::graphic_generator( visDeg, visDeg );
+graph_gen.add_transformation( circlegen, vsg::combine_none );
+graph_gen.add_parameter_increment( circlegen, vsg::phase, 12 );# 1/30 * 360 deg = 7.2 (not degree visual angle, but degree of the phase) adapt if trial takes too long/short.
+graph_gen.set_colors( BG[1], BG[2], BG[3], BG[4], BG[5], BG[6] );# green-and-grey circles
+graph_gen.draw( brightgreensurfaces, brightgreensurfaces.count() );
+
+# making an array of bright red-and-grey circles
+graph_gen.set_colors( BR[1], BR[2], BR[3], BR[4], BR[5], BR[6] );# red-and-grey circles
+graph_gen.draw( brightredsurfaces, brightredsurfaces.count() );
+
+# making an array of dark green-and-grey circles
+graph_gen.set_colors( DG[1], DG[2], DG[3], DG[4], DG[5], DG[6] );# red-and-grey circles
+graph_gen.draw( darkgreensurfaces, darkgreensurfaces.count() );
+
+# making an array of dark red-and-grey circles
+graph_gen.set_colors( BR[1], BR[2], BR[3], BR[4], BR[5], BR[6] );# red-and-grey circles
+graph_gen.draw( darkredsurfaces, darkredsurfaces.count() );
+
+# making a mask that sets the screen surrounding the cicrles to grey
+vsg::ellipse_generator ellipsegen = new vsg::ellipse_generator( visDeg, visDeg, 0.0 );# an ellipse to act as a mask
+vsg::graphic_generator graph_gen2 = new vsg::graphic_generator( visDeg, visDeg );
+graph_gen2.add_transformation( ellipsegen, vsg::combine_none );
+graph_gen2.set_colors( GB[1], GB[2], GB[3], GB[4], GB[5], GB[6] );# grey background, black circle
+graphic_surface mask = graph_gen2.create();
+mask.set_transparent_color( 0, 0, 0 );
+  
+# putting the mask in the picture
+pic.set_part( 2, mask );
 
 # Present instruction screen for object naming, continue with enter
 p_instr.present();		 
-WaitForButtonpress( button_enter );
+WaitForButtonpress( button_yes );
 
 ########### training ###########
 
 training();
+
+countdown( outputfilename );# show countdown on screen, write onset of 31st pulse to log file.
 
 ########### experiment ###########
 
@@ -35,7 +88,7 @@ nr_trials = 0;
 blocknr = 1;
 runnr =1 ;
 
-# We present 3 runs x 32 miniblocks with 20s breaks between runs
+# We present 3 runs x 32 miniblocks.
 
 loop int i = 1 until i > 3  # 3 runs
 begin
@@ -44,12 +97,13 @@ begin
 	# Showing pause screen after each run
 	if TrialType == "E" && i < 3 then # This is to not show the pause during training and after the last run
 	
-		t_pause_1b.set_caption("This was block " + string(runnr) + " of 3 blocks.");
+		s_beep.present(); # Present beep signal for experimenter
+		t_pause_1b.set_caption("Dit was blok " + string(runnr) + " van 3.");
 		t_pause_1b.redraw();
 		p_pause.present(); # Present pause screen
-		s_beep.present(); # Present beep signal for experimenter
 		
 		WaitForButtonpress( button_enter ); # Wait for experimenter to continue
+		countdown( outputfilename);
 		
 		runnr = runnr + 1;
 	end; 
