@@ -1,19 +1,11 @@
 ####### INITIATION #######
 
 # Initiation of the scenario and the main PCL-file
-
-scenario_type = fMRI_emulation;
+scenario_type = fMRI;#_emulation;# set to fMRI at scanner
 pcl_file = "CTraining_MAIN.pcl";
 pulse_code = 255;
 pulses_per_scan = 1;
-scan_period = 2000;
-
-# font
-default_background_color = 82,82,82; # mid grey
-default_font = "arial";
-#default_font_size = 20;
-default_text_color = 255,255,255; # white
-default_text_align = align_center;
+#scan_period = 2000;
 
 # the resolution of the projector at the Skyra (not sure about bit depth)
 screen_height = 768; # 25 deg. visual angle
@@ -28,13 +20,19 @@ screen_height_distance = 13.39;# Skyra
 # set screen_distance to distance between screen and eyes of subject
 screen_distance = 30.12;# Skyra
 
+# font
+default_background_color = 82,82,82; # mid grey
+default_font = "arial";
+default_font_size = .6;
+default_text_color = 0,0,0; # black
+default_text_align = align_center;
+
 # keep SDL as simple as possible and stay clear of the parallel port
 response_matching = simple_matching;
 response_port_output = true; 
 
-active_buttons = 3;
-button_codes = 1,2,3;  # 1 = ENTER-exp-subj # 2 yes # 3 no
-
+active_buttons = 5;
+button_codes = 1,2,3,4,5;  # 1 = ENTER-exp-subj # 2 yes # 3 no
 
 ### Definitions
 
@@ -48,10 +46,7 @@ button_codes = 1,2,3;  # 1 = ENTER-exp-subj # 2 yes # 3 no
 # the background value (of the mask and in-between the colours of the circles) should be calibrated to be 180 cd/m^2 luminance.x
 
 ######### BEGIN ##########
-
 begin;
-
-##########################
 
 ### pictures
 
@@ -60,24 +55,28 @@ picture {
 
 picture { text { caption = " "; } t_info1; x = 0; y = 1;
           text { caption = " "; } t_info2; x = 0; y = -1;
-          text { caption = "Press [ENTER] to confirm or [Esc] to abort. "; } t_info3; x = 0; y = -2;
+          text { caption = "[ENTER] om te bevestigen of [Esc] om af te sluiten. "; } t_info3; x = 0; y = -2;
 } p_info; # text
 
 picture {ellipse_graphic {ellipse_width = 0.5; ellipse_height = 0.5; color = 0, 0, 0; rotation = 30;} circle; 
 			x = 0; y = 0;
 }fixation; # circle fixation
 
-picture { box { height = 0.05; width = 2; color = 0, 0, 0; } horz_s;
-			 x = 0; y = 0;
-			 box { height = 2; width = 0.05; color = 0, 0, 0; } vert_s;
-			 x = 0; y = 0;
-} fixation_cross;  # fixation cross
+picture { 	ellipse_graphic {ellipse_width = 0.3; ellipse_height = 0.3; color = 0, 0, 0;} bl_dot;
+	x = 0; y = 0;
+	ellipse_graphic {ellipse_width = 0.2; ellipse_height = 0.2; color = 255, 255, 255;} wh_dot;
+	x = 0; y = 0;
+} fixation_cross;  # fixation circle, but yeah.
 
 picture {
    bitmap { preload = false; }dummy;
    x = 0; y = 0;
 	bitmap { preload = false; }dummy2;
    x = 0; y = 0;
+	ellipse_graphic bl_dot ;
+	x = 0; y = 0;
+	ellipse_graphic wh_dot ;
+	x = 0; y = 0;
 } pic;
 
 trial {
@@ -87,37 +86,58 @@ trial {
 }trial1;
 
 
-picture { text { caption = "Welcome!"; } t_welcome_1a; x = 0; y = 1;  
-        text { caption = "This part of the experiment will last";}t_welcome_1b; x = 0; y = 0; 
-		text { caption = "approximately 20 minutes.";}t_welcome_1c; x = 0; y = -1;
+picture { text { caption = "Welkom
+Dit deel van het experiment
+zal ongeveer 20 minuten duren.
+										
+						(rechter wijsvinger) >";}t_welcome_1; x = 0; y = 0;
 } p_welcome;
 
-picture { text { caption = "Pause."; } t_pause_1a; x = 0; y = 1;  
-        text { caption = "This is pause 1.";}t_pause_1b; x = 0; y = 0; 
-		text { caption = "The experimenter will continue with [ENTER].";}t_pause_1c; x = 0; y = -1;
+picture { text { caption = "Pauze"; } t_pause_1a; x = 0; y = 1;  
+        text { caption = "Je hebt nu pauze. Blijf stil liggen s.v.p.";}t_pause_1b; x = 0; y = 0; 
+		text { caption = "De proefleider zal zo het voldende deel starten met [ENTER].";}t_pause_1c; x = 0; y = -1;
 } p_pause;
 
-picture { text { caption = "Instructions: Please answer the following question for every picture you see: ";}t_instruction_1a; x = 0; y = 3;
-			text { caption = "Do the circles move in the same direction as before?";}t_instruction_1b; x = 0; y = 2;
-			text { caption = "Press left for yes and right for no while you see the circles.";}t_instruction_1c; x = 0; y = 1;
-			text { caption = "Please try not to repeat the direction in your head to remember it.";}t_instruction_1d; x = 0; y = 0;		
-			text { caption = "The task will be the same for all blocks.";}t_instruction_1e; x = 0; y = -1; 
-			text { caption = "Press enter to continue.";}t_instruction_1f; x = 0; y = -3; 
+picture { text { caption = "Ze zult nu in elke trial bewegende cirkels te zien krijgen.
+Soms rood, soms groen. Jouw taak is om aan te geven of
+de beweging in dezelfde richting gaat als de vorige trial.
+De kleur is niet relevant. Druk wijsvinger voor zelfde richting, 
+middelvinger voor andere richting. Er zijn drie blokken van 7 minuten
+met pauzes ertussen. Houd je blik op het fixeerpunt, en
+probeer s.v.p. om de richting NIET in je hoofd te herhalen
+om deze te onthouden, dit stoort onze analyses.
+											
+											(wijsvinger) >";}t_instr; x=0; y=0;
 } p_instr;
 
-picture { text { caption = "We will start with 4 training trials."; } t_train_1a; x = 0; y = 1;  
-        text { caption = "You don't have to press anything for the first circle.";}t_train_1b; x = 0; y = 0; 
-		text { caption = "Press enter to continue.";}t_train_1c; x = 0; y = -1; 
+picture { text { caption = "De trials komen steeds in groepjes van vier,
+Met een iets langere pauze ertussen. De taak gaat gewoon door,
+Dus onthoud ook tussen de blokken de laatste beweegrichting.
+We beginnen met 8 trainingstrials. Je hoeft niets te drukken
+voor de eerste cirkel.
+
+Druk wijsvinger om te beginnen. >";}t_train_1; x = 0; y = 0; 
 } p_training;
 
-picture { text { caption = "Training end screen."; } t_trainend_1a; x = 0; y = 1;  
-        text { caption = "Press enter to continue to the experiment.";}t_trainend_1b; x = 0; y = 0; 
+
+picture { text { caption =
+"Wil je nog een ronde oefenen?
+Druk wijsvinger voor ja, middelvinger voor nee."; } t_training_1; x = 0; y = 0;  
+} p_trainingCont;
+
+
+picture { text { caption = "Training voltooid."; } t_trainend_1a; x = 0; y = 1;  
+        text { caption = "Wij starten zo het experiment met [ENTER].";}t_trainend_1b; x = 0; y = 0; 
 } p_training_end;
 
-picture { text { caption = "Het experiment is nu afgelopen."; } t_end_1a; x = 0; y = 1;  
-			 text { caption = "Bedankt voor het meedoen!";  } t_end_1b; x = 0; y = 0;
-			 text { caption = "Wij drukken straks op [ENTER] om het experiment af te sluiten.";} t_end_1c; x = 0; y = -1;
+picture { text { caption = "Bedankt, deze taak is nu afgelopen.
+Er volgt nog een laatste taak (1u) en een anatomische scan (5 min).
+Wij drukken straks op [ENTER] om dit deel af te sluiten.";} t_end_1; x = 0; y = -1;
 } p_end_1;
+
+picture { text { caption = "Wachten op de scanner...
+"; } t_countdown; x = 0; y = 0;
+} p_countdown; # countdown picture for when the scanner is collecting 30 volume-weighting volumes before the exp. starts.
 
 ##### sound file(s) ######
 
