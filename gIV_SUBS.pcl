@@ -59,7 +59,7 @@ sub array < double,1 > flickertrial(vsg::graphic_generator graph_gen2, array< do
 	int rgb;
 	if clr[2] > clr[1] then# assuming green
 		rgb = 2;
-	elseif clr[1] > clr[2] then# assuming red
+	elseif clr[1] > clr[2] then# assuming red# FAILS WHEN PEOPLE GO BELOW 0!!
 		rgb = 1;
 	end;
 	
@@ -85,24 +85,68 @@ begin
 		if response_manager.last_response() == button_BRIGHTER then# right index
 			
 			clr[rgb] = clr[rgb] + 10;# adust colour intensity up
+			
+			if clr[rgb] > 255 then # color values below 0 are allowed by Presentation but break the code
+				term.print_line("colour too high: " + string(clr[rgb]) );
+				clr[rgb] = clr[rgb] - 255;
+				term.print_line("now set to     : " + string(clr[rgb]) );
+			elseif clr[rgb] < 0 then
+				term.print_line("colour too low: " + string(clr[rgb]) );
+				clr[rgb] = clr[rgb] + 255;
+				term.print_line("now set to     : " + string(clr[rgb]) );
+			end;
+			
 			graph_gen2.set_colors( 0.5*(clr[1]+bkg[1]), 0.5*(clr[1]-bkg[1]), 0.5*(clr[2]+bkg[2]), 0.5*(clr[2]-bkg[2]), 0.5*(clr[3]+bkg[3]), 0.5*(clr[3]-bkg[3]) );# colour circle on a grey background
 			surface = graph_gen2.create();
 			
 		elseif response_manager.last_response() == button_brighter then# right middle
 			
 			clr[rgb] = clr[rgb] + 1;# up
+			
+			if clr[rgb] > 255 then # color values below 0 are allowed by Presentation but break the code
+				term.print_line("colour too high: " + string(clr[rgb]) );
+				clr[rgb] = clr[rgb] - 255;
+				term.print_line("now set to     : " + string(clr[rgb]) );
+			elseif clr[rgb] < 0 then
+				term.print_line("colour too low: " + string(clr[rgb]) );
+				clr[rgb] = clr[rgb] + 255;
+				term.print_line("now set to     : " + string(clr[rgb]) );
+			end;
+			
 			graph_gen2.set_colors( 0.5*(clr[1]+bkg[1]), 0.5*(clr[1]-bkg[1]), 0.5*(clr[2]+bkg[2]), 0.5*(clr[2]-bkg[2]), 0.5*(clr[3]+bkg[3]), 0.5*(clr[3]-bkg[3]) );# colour circle on a grey background
 			surface = graph_gen2.create();
 			
 		elseif response_manager.last_response() == button_darker then# down
 			
 			clr[rgb] = clr[rgb] - 1;# down
+			
+			if clr[rgb] > 255 then # color values below 0 are allowed by Presentation but break the code
+				term.print_line("colour too high: " + string(clr[rgb]) );
+				clr[rgb] = clr[rgb] - 255;
+				term.print_line("now set to     : " + string(clr[rgb]) );
+			elseif clr[rgb] < 0 then
+				term.print_line("colour too low: " + string(clr[rgb]) );
+				clr[rgb] = clr[rgb] + 255;
+				term.print_line("now set to     : " + string(clr[rgb]) );
+			end;
+			
 			graph_gen2.set_colors( 0.5*(clr[1]+bkg[1]), 0.5*(clr[1]-bkg[1]), 0.5*(clr[2]+bkg[2]), 0.5*(clr[2]-bkg[2]), 0.5*(clr[3]+bkg[3]), 0.5*(clr[3]-bkg[3]) );# colour circle on a grey background
 			surface = graph_gen2.create();
 			
 		elseif response_manager.last_response() == button_DARKER then# right little finger
 			
 			clr[rgb] = clr[rgb] - 10;# down
+			
+			if clr[rgb] > 255 then # color values below 0 are allowed by Presentation but break the code
+				term.print_line("colour too high: " + string(clr[rgb]) );
+				clr[rgb] = clr[rgb] - 255;
+				term.print_line("now set to     : " + string(clr[rgb]) );
+			elseif clr[rgb] < 0 then
+				term.print_line("colour too low: " + string(clr[rgb]) );
+				clr[rgb] = clr[rgb] + 255;
+				term.print_line("now set to     : " + string(clr[rgb]) );
+			end;
+			
 			graph_gen2.set_colors( 0.5*(clr[1]+bkg[1]), 0.5*(clr[1]-bkg[1]), 0.5*(clr[2]+bkg[2]), 0.5*(clr[2]-bkg[2]), 0.5*(clr[3]+bkg[3]), 0.5*(clr[3]-bkg[3]) );# colour circle on a grey background
 			surface = graph_gen2.create();
 			
