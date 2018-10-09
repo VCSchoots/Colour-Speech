@@ -12,7 +12,7 @@ include "CTraining_SUBS.pcl";		# Include all the subroutines.
 # Loop until the clock is no longer negative.
 loop until clock.time() >= 0 begin end; 	
 
-########### welcome ###########
+########### welcome ##################################
 
 # present a blank screen 
 default.present(); 
@@ -20,6 +20,9 @@ default.present();
 # Present welcome screen, continue with enter
 p_welcome.present();		 
 WaitForButtonpress( button_yes );
+
+################## Eye calibration ###################
+eyeCalib();
 
 ############# Read input file, Prepare logfile, set colours #############################
 Get_subj_info("Please enter subject code, e.g. sub_01.");
@@ -72,7 +75,8 @@ mask.set_transparent_color( 0, 0, 0 );
 # putting the mask in the picture
 pic.set_part( 2, mask );
 
-# Present instruction screen for object naming, continue with enter
+################### Present instruction screen for object naming, continue with enter ###########################
+
 p_instr.present();		 
 WaitForButtonpress( button_yes );
 
@@ -116,3 +120,6 @@ end;
      
 EndFinalScreen();
 
+
+########### after experiment, one more eyetracker calibration #############
+eyeCalib();
