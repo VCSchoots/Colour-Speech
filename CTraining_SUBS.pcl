@@ -155,6 +155,36 @@ begin
 
 end;
 
+########################### Eyetracker calibration #####################
+
+sub eyeCalib begin# not logged in main log, but in Presentation standard log and in the eye tracker log.
+	
+	text_eyetr.present();
+	
+	int counter = 1;
+	
+	loop until counter > xarray.count()
+	begin
+		
+		cross.set_part_x(1, xarray[counter]);
+		cross.set_part_y(1, yarray[counter]);
+		
+		cross.set_part_x(2, xarray[counter]);
+		cross.set_part_y(2, yarray[counter]);
+		
+		countStr = string( counter );
+		newEvCode = evCode;
+		newEvCode.append( countStr );# the event code for the Presentation log file is set to "calibr_cross1", "calibr_cross2", etc.)
+		crossevent.set_event_code(newEvCode);
+		crossevent.set_port_code(counter);# the code that is sent to the output port (eyetracker) is set to the cross nr. (1 = middle, 2 = left top, etc.)
+		
+		eyetrial.present();
+		
+		counter = counter + 1;
+	end;
+
+end;
+
 ############################ Scanner countdown #######################   
 
 # present a countdown screen and print the time of the 31st scan trigger to Log file
