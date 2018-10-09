@@ -57,6 +57,22 @@ string outputfilename;
 
 #output_port oport = output_port_manager.get_port( 1 );   # handling the port for sending triggers for EEG
 
+# ------------- EYETRACKER CALIBRATION VARIABLES INITIATION ------------------
+
+string evCode = crossevent.event_code();
+string newEvCode;
+string countStr;
+string pictName;
+
+array <double> xarray [14] =  {0.0, -7.19, 7.19, -7.19, 7.19, -7.19, 0.0, 7.19, 0.0, -3.6, 3.6, -3.6, 3.6, 0.0}; 
+array <double> yarray [14] =  {0.0, 7.19, 7.19, -7.19, -7.19, 0.0, 7.19, 0.0, -7.19, 3.6, 3.6, -3.6, -3.6, 0.0}; 
+# visual angles are 7.19 degrees and 3.6 (half of that) out. The visual angle taken by the stimuli is 7.19,
+# so they extend out to 3.6 degrees from centre.
+
+array <int> tgtArray [30];
+tgtArray.fill( 1, 0, 21, 1);# fill it with 21 - 50 (codes for the stimuli)
+array <string> stimulusList[3];
+
 # ---------------------OTHER VARIABLES INITIATION ----------------------------
 string colourOld; # for one back task
 int directionOld; # for one back task
