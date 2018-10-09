@@ -87,8 +87,9 @@ trial {
 
 
 picture { text { caption = "Welkom
-Dit deel van het experiment
-zal ongeveer 20 minuten duren.
+
+Dit deel van het experiment zal ongeveer 20 minuten duren.
+Als eerste komt nu een kalibratie van de oogcamera.
 										
 						(rechter wijsvinger) >";}t_welcome_1; x = 0; y = 0;
 } p_welcome;
@@ -131,13 +132,48 @@ picture { text { caption = "Training voltooid."; } t_trainend_1a; x = 0; y = 1;
 } p_training_end;
 
 picture { text { caption = "Bedankt, deze taak is nu afgelopen.
-Er volgt nog een laatste taak (1u) en een anatomische scan (5 min).
+Er volgt nog een laatste taak (1u) en een anatomische scan (6 min).
 Wij drukken straks op [ENTER] om dit deel af te sluiten.";} t_end_1; x = 0; y = -1;
 } p_end_1;
 
 picture { text { caption = "Wachten op de scanner...
 "; } t_countdown; x = 0; y = 0;
 } p_countdown; # countdown picture for when the scanner is collecting 30 volume-weighting volumes before the exp. starts.
+
+
+###################### for the eyetracker calibration ############################
+
+trial {                             #instructions
+
+   trial_duration = 5000;
+
+	stimulus_event {
+		picture{
+			text { caption = "Kalibratie oogcamera
+In deze taak moet je je blik op het kruisje fixeren "; } introtext;
+			x=0;y=0;
+      } textpic;
+		code = "instr_text";
+	}instr_event;
+}text_eyetr;
+
+
+trial {                             #Show focus point
+
+   trial_duration = 2000;
+
+	stimulus_event {
+		picture {
+			box {height = .1; width = 1; color = 250, 250, 250;}horizontal;
+			x=0;y=0;
+			box {height = 1; width = .1; color = 250, 250, 250;}vertical;
+			x=0;y=0;
+		}cross;
+		code = "calibr_cross";
+		port_code = 15; # needs to be there at scanner!! (for proper log file eyetracker)
+	} crossevent;
+}eyetrial;
+
 
 ##### sound file(s) ######
 
