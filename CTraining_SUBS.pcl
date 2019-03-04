@@ -214,6 +214,8 @@ sub countdown( string sFilename) begin
 				t_countdown.redraw();
 				p_countdown.present();
 			elseif pulsecount > mri_pulse_wait then #when the counter is at 1, do not flash a 0 before moving on
+				oport.set_pulse_width( 50 );
+				oport.send_code(254);#send a trigger to the eyetracker
 			end;
 			pulsecount = pulsecount + 1;
 		end;
