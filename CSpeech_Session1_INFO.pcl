@@ -25,7 +25,7 @@ string inputfilename;
 output_file ofile1 = new output_file;
 string outputfilename;
 
-#output_port oport = output_port_manager.get_port( 1 );   # handling the port for sending triggers for EEG
+output_port oport = output_port_manager.get_port( 1 );# set the port properly for sending triggers to Eyelink
 
 # ------------- EYETRACKER CALIBRATION VARIABLES INITIATION ------------------
 
@@ -110,5 +110,5 @@ int end_loop_time;
 #string list;
 
 # --------------------- EXPERIMENT VARIABLES INITIATION ----------------------------;
-int security = 10;                         # we subtract the security of 15ms from every desired duration to be sure to be in the time frame we want (--> refresh rate issue)
+int security = 10;                         # we subtract the security from every desired duration to be sure to be in the time frame we want (--> refresh rate issue)
 int pause_duration     = 120000 - security; # 2 minute break
