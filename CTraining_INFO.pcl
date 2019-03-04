@@ -55,7 +55,7 @@ string inputfilename;
 output_file ofile1 = new output_file;
 string outputfilename;
 
-#output_port oport = output_port_manager.get_port( 1 );   # handling the port for sending triggers for EEG
+output_port oport = output_port_manager.get_port( 1 );# set the port properly for sending triggers to Eyelink
 
 # ------------- EYETRACKER CALIBRATION VARIABLES INITIATION ------------------
 
